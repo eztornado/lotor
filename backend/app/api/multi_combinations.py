@@ -95,6 +95,11 @@ async def get_weekly_combinations(num_combinations: int = 7):
         if statistical.total_draws == 0:
             statistical.train(historical_data)
 
+        # Entrenar modelo ensemble si tiene train() y no está entrenado
+        if hasattr(ensemble, 'train') and (not hasattr(ensemble, 'is_trained') or not ensemble.is_trained):
+            logger.info("Training ensemble model...")
+            ensemble.train(historical_data)
+
         # Preparar secuencia para modelos ML
         sequence = []
         for draw in sorted(historical_data, key=lambda x: x['date'])[-settings.MAX_HISTORY_LENGTH:]:

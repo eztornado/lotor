@@ -84,6 +84,7 @@ class LightweightPredictor:
     def _extract_features(self, draw: dict) -> List[float]:
         """Extraer features de un sorteo"""
         numbers = draw['numbers']
+        date = draw.get('date')
         return [
             sum(numbers),  # Suma
             np.mean(numbers),  # Media
@@ -93,8 +94,8 @@ class LightweightPredictor:
             max(numbers) - min(numbers),  # Rango
             len([n for n in numbers if n % 2 == 1]),  # Números impares
             draw['key_number'],  # Número clave anterior
-            draw['date'].weekday(),  # Día de la semana
-            draw['date'].month  # Mes
+            date.weekday() if date else 0,  # Día de la semana (0 si no hay fecha)
+            date.month if date else 1  # Mes (1 si no hay fecha)
         ]
 
     def _train_sklearn_models(self, X_numbers, X_keys, y_numbers, y_keys):
