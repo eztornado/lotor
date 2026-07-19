@@ -1,5 +1,6 @@
 #!/bin/bash
-# Test LoTor en Raspberry Pi - Version FINAL
+# Test LoTor en Raspberry Pi - Version CORREGIDA
+# Usa scikit-learn en lugar de sklearn
 
 set -e
 
@@ -23,7 +24,7 @@ echo "2/8 Verificando numpy (versión precompilada ARM)..."
 python -c "import numpy; print(f'   ✓ NumPy {numpy.__version__}')"
 
 echo ""
-echo "3/8 Verificando scikit-learn..."
+echo "3/8 Verificando scikit-learn (scikit-learn, no sklearn)..."
 python -c "import sklearn; print(f'   ✓ scikit-learn {sklearn.__version__}')"
 
 echo ""
