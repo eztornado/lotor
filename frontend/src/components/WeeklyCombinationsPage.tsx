@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import {
-  Container, Title, Stack, Paper, Grid, Card, Group, Button, Badge, Alert, Text, Box, Progress, NumberInput, ActionIcon, Tooltip
+  Title, Stack, Paper, Grid, Card, Group, Button, Badge, Alert, Text, Box, Progress, NumberInput
 } from '@mantine/core'
-import { IconRefresh, IconInfoCircle, IconAlertTriangle, IconBulb, IconTrophy, IconShield, IconBalance } from '@tabler/icons-react'
+import { IconRefresh, IconInfoCircle, IconAlertTriangle, IconBulb, IconTrophy, IconShield, IconScale } from '@tabler/icons-react'
 import { combinationsApi, WeeklyCombinationsResponse, Combination } from '../services/api'
 
 export default function WeeklyCombinationsPage() {
@@ -45,7 +45,7 @@ export default function WeeklyCombinationsPage() {
   const getRiskIcon = (risk: string) => {
     switch (risk) {
       case 'conservative': return <IconShield size={16} />
-      case 'balanced': return <IconBalance size={16} />
+      case 'balanced': return <IconScale size={16} />
       case 'risky': return <IconTrophy size={16} />
       default: return <IconInfoCircle size={16} />
     }
@@ -135,10 +135,12 @@ export default function WeeklyCombinationsPage() {
 
               <Progress
                 value={data.coverage_metrics.unique_numbers_coverage}
-                label={`Cobertura de números: ${data.coverage_metrics.unique_numbers_coverage.toFixed(1)}%`}
                 color="green"
                 size="lg"
               />
+              <Text size="xs" c="dimmed">
+                Cobertura de números: {data.coverage_metrics.unique_numbers_coverage.toFixed(1)}%
+              </Text>
 
               <Text size="xs" c="dimmed">
                 Solapamiento promedio: {data.coverage_metrics.avg_combination_overlap.toFixed(1)} números por combinación

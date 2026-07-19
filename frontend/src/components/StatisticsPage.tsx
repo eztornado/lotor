@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Container, Title, Stack, Paper, Grid, Card, Text, Loader, Badge, Progress, Box } from '@mantine/core'
+import { Title, Stack, Paper, Grid, Card, Text, Loader, Badge, Progress, Box, Group } from '@mantine/core'
 import { statsApi, NumberStats, KeyNumberStats } from '../services/api'
 
 export default function StatisticsPage() {
@@ -29,7 +29,7 @@ export default function StatisticsPage() {
   const coldNumbers = stats.number_stats.filter((n: NumberStats) => n.cold).slice(0, 10)
 
   return (
-    <Stack gap="xl">
+    <Stack gap={32}>
       <Title order={2}>📊 Estadísticas Generales</Title>
 
       <Paper shadow="sm" p="md" withBorder>

@@ -25,6 +25,9 @@ COPY backend/app ./app
 # Copiar datos históricos (incluye el CSV actualizado)
 COPY backend/data ./data
 
+# Copiar frontend construido
+COPY frontend/dist ./frontend
+
 # Crear directorios necesarios
 RUN mkdir -p data/raw data/processed app/ml/models logs
 

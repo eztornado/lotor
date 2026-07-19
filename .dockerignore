@@ -7,8 +7,14 @@ Dockerfile
 docker-compose.yml
 
 # Frontend (no lo necesitamos en el backend)
-frontend/
-node_modules/
+# frontend/
+frontend/node_modules/
+frontend/src/
+frontend/public/
+frontend/package*.json
+frontend/tsconfig*.json
+frontend/vite.config.ts
+frontend/.eslintrc*
 
 # Python cache
 __pycache__/
@@ -19,7 +25,7 @@ __pycache__/
 *.so
 *.egg
 *.egg-info/
-dist/
+# dist/  # Comentado para permitir frontend/dist
 build/
 
 # Virtual environments

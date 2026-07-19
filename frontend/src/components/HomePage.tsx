@@ -1,10 +1,10 @@
-import { Container, Title, Text, Stack, Paper, Grid, Card, Group, Button, Badge, Alert } from '@mantine/core'
+import { Title, Text, Stack, Paper, Grid, Card, Group, Button, Badge } from '@mantine/core'
 import { Link } from 'react-router-dom'
 import { IconBrain, IconChartBar, IconHistory, IconArrowRight, IconTarget } from '@tabler/icons-react'
 
 export default function HomePage() {
   return (
-    <Stack gap="xl">
+    <Stack gap={32}>
       <div style={{ textAlign: 'center', padding: '2rem 0' }}>
         <Title order={1} c="blue.4">🎱 LoTor</Title>
         <Text size="xl" c="dimmed" mt="md">
@@ -17,7 +17,7 @@ export default function HomePage() {
           <Card shadow="md" padding="xl" radius="md" withBorder style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
             <Stack gap="md">
               <Group justify="space-between">
-                <IconTarget size={48} c="white" />
+                <IconTarget size={48} style={{ color: 'white' }} />
                 <Badge size="xl" color="white" variant="light">NUEVO</Badge>
               </Group>
               <Title order={2} c="white">🎯 Sistema de 7 Combinaciones Semanales</Title>
@@ -45,7 +45,7 @@ export default function HomePage() {
           <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
             <Stack gap="md">
               <Group justify="space-between">
-                <IconBrain size={32} c="blue.4" />
+                <IconBrain size={32} style={{ color: '#228be6' }} />
                 <Badge color="blue" variant="light">IA/ML</Badge>
               </Group>
               <Title order={3}>Predicción Única</Title>
@@ -63,7 +63,7 @@ export default function HomePage() {
           <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
             <Stack gap="md">
               <Group justify="space-between">
-                <IconChartBar size={32} c="green.4" />
+                <IconChartBar size={32} style={{ color: '#2fb944' }} />
                 <Badge color="green" variant="light">Análisis</Badge>
               </Group>
               <Title order={3}>Estadísticas Detalladas</Title>
@@ -81,7 +81,7 @@ export default function HomePage() {
           <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
             <Stack gap="md">
               <Group justify="space-between">
-                <IconHistory size={32} c="orange.4" />
+                <IconHistory size={32} style={{ color: '#fd9b44' }} />
                 <Badge color="orange" variant="light">Datos</Badge>
               </Group>
               <Title order={3}>Historial Completo</Title>

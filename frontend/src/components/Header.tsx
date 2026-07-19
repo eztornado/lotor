@@ -1,4 +1,4 @@
-import { Group, Anchor, Text, Burger, Drawer, Button } from '@mantine/core'
+import { Group, Anchor, Text, Burger, Drawer, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconHome, IconBrain, IconChartBar, IconHistory, IconTarget } from '@tabler/icons-react'
 import { Link, useLocation } from 'react-router-dom'
@@ -51,15 +51,15 @@ export default function Header() {
 
         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
 
-        <Group gap="xl" visibleFrom="sm">
+        <Group gap={32} visibleFrom="sm">
           {items}
         </Group>
       </Group>
 
       <Drawer opened={opened} onClose={close} size="sm" hiddenFrom="sm">
-        <Group direction="column" gap="md">
+        <Stack gap={16}>
           {items}
-        </Group>
+        </Stack>
       </Drawer>
     </header>
   )
