@@ -71,6 +71,7 @@ curl http://tu-dominio/docs
 - **pandas** - Análisis de datos
 - **numpy** - Computación numérica
 - **Sin PyTorch** - Máxima compatibilidad ARM/Docker
+- **211 sorteos históricos** - 4 años de datos (2022-2026) para máxima precisión
 
 ### Frontend
 - **React 18** - Framework UI

@@ -10,7 +10,7 @@ from pathlib import Path
 class DataSourceStrategy:
     """Strategy pattern para diferentes fuentes de datos"""
 
-    def fetch_draws(self, count: int = 52) -> List[dict]:
+    def fetch_draws(self, count: int = 200) -> List[dict]:
         """Obtener últimos N sorteos"""
         raise NotImplementedError
 
@@ -23,7 +23,7 @@ class RSSFeedSource(DataSourceStrategy):
     def __init__(self):
         self.session = requests.Session()
 
-    def fetch_draws(self, count: int = 52) -> List[dict]:
+    def fetch_draws(self, count: int = 200) -> List[dict]:
         """Obtener sorteos desde RSS feed"""
         logger.info(f"Fetching {count} draws from RSS feed")
 
@@ -78,7 +78,7 @@ class LoteriaAPISource(DataSourceStrategy):
 
     BASE_URL = "https://api.loteriasapi.com"
 
-    def fetch_draws(self, count: int = 52) -> List[dict]:
+    def fetch_draws(self, count: int = 200) -> List[dict]:
         """Obtener sorteos desde LoteriaAPI"""
         logger.info(f"Fetching {count} draws from LoteriaAPI")
 
@@ -134,7 +134,7 @@ class DowntackAPISource(DataSourceStrategy):
 
     BASE_URL = "https://api.downtack.com/loteria"
 
-    def fetch_draws(self, count: int = 52) -> List[dict]:
+    def fetch_draws(self, count: int = 200) -> List[dict]:
         """Obtener sorteos desde Downtack API"""
         logger.info(f"Fetching {count} draws from Downtack")
 
@@ -191,7 +191,7 @@ class CSVSource(DataSourceStrategy):
         self.csv_path = csv_path
         self.csv_url = csv_url
 
-    def fetch_draws(self, count: int = 52) -> List[dict]:
+    def fetch_draws(self, count: int = 200) -> List[dict]:
         """Cargar sorteos desde CSV"""
         logger.info(f"Loading draws from CSV")
 
@@ -263,13 +263,13 @@ class RobustDataManager:
             DowntackAPISource(),       # 3. API Downtack
         ]
 
-        # CSV fallback con dataset actualizado 2026
+        # CSV fallback con dataset completo actualizado (2022-2026)
         self.csv_source = CSVSource(
-            csv_path=f"{data_dir}/raw/primitiva_historical_2026.csv",
+            csv_path=f"{data_dir}/raw/primitiva_historical_complete.csv",
             csv_url="https://raw.githubusercontent.com/loterias-data/primitiva-historica/main/sorteos.csv"
         )
 
-    def get_historical_data(self, force_refresh: bool = False, count: int = 52) -> List[dict]:
+    def get_historical_data(self, force_refresh: bool = False, count: int = 200) -> List[dict]:
         """Obtener datos históricos con estrategia de fallback"""
 
         # Intentar cargar del cache primero

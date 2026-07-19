@@ -29,7 +29,7 @@ class Settings(BaseSettings):
 
     # ML Models
     MODELS_PATH: str = "./app/ml/models"
-    MAX_HISTORY_LENGTH: int = 52  # Semanas de historial a usar
+    MAX_HISTORY_LENGTH: int = 200  # Semanas de historial a usar (aumentado para mejor precisión)
     FORCE_LIGHTWEIGHT_MODELS: bool = False  # Forzar modelos ligeros sin PyTorch
     ML_MODEL_TYPE: str = "auto"  # Opciones: "auto", "pytorch", "lightweight", "statistical"
 

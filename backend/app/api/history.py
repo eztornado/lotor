@@ -22,11 +22,11 @@ def get_data_manager():
 
 @router.get("/recent", response_model=List[DrawResult])
 async def get_recent_draws(
-    limit: int = Query(default=52, ge=1, le=200, description="Número de sorteos a obtener")
+    limit: int = Query(default=200, ge=1, le=500, description="Número de sorteos a obtener")
 ):
     """
     Obtener los últimos N sorteos
-    Por defecto, las últimas 52 semanas (1 año)
+    Por defecto, los últimos 200 sorteos (~4 años de datos)
     """
     try:
         manager = get_data_manager()

@@ -69,10 +69,10 @@ class PrimitivaScraper:
             logger.error(f"Error parsing draw result: {e}")
             return None
 
-    def fetch_recent_draws(self, count: int = 52) -> List[dict]:
+    def fetch_recent_draws(self, count: int = 200) -> List[dict]:
         """
         Obtener los últimos N sorteos
-        Por defecto, 52 semanas (1 año)
+        Por defecto, 200 sorteos (~4 años de datos)
         """
         logger.info(f"Fetching last {count} draws from El Gordo de la Primitiva")
 
