@@ -1,4 +1,15 @@
-import torch
+# Importación condicional de PyTorch
+try:
+    import torch
+    HAS_TORCH = True
+except ImportError:
+    HAS_TORCH = False
+    # Creamos un mock simple de torch para las funciones que necesitamos
+    class torch:
+        @staticmethod
+        def tensor(data, dtype=None):
+            return data
+
 import numpy as np
 from typing import List, Dict, Tuple, Optional
 from loguru import logger
@@ -24,15 +35,7 @@ class MultiCombinationGenerator:
     def __init__(self, ensemble_model, statistical_model):
         self.ensemble_model = ensemble_model
         self.statistical_model = statistical_model
-        self.strategies = {
-            'ensemble': self._ensemble_strategy,
-            'conservative': self._conservative_strategy,
-            'balanced': self._balanced_strategy,
-            'risky': self._risky_strategy,
-            'pattern_based': self._pattern_strategy,
-            'random_optimized': self._random_optimized_strategy,
-            'diversified': self._diversified_strategy
-        }
+        # Estrategias disponibles (código eliminado - no se usa en generate_weekly_combinations)
 
     def generate_weekly_combinations(
         self,
@@ -395,13 +398,13 @@ class MultiCombinationGenerator:
                 overlap = len(set(combinations[i].numbers) & set(combinations[j].numbers))
                 overlaps.append(overlap)
 
-        avg_overlap = np.mean(overlaps) if overlaps else 0
+        avg_overlap = float(np.mean(overlaps)) if overlaps else 0.0
 
         # Distribución de riesgo
         risk_dist = Counter([combo.risk_level for combo in combinations])
 
         return {
-            'unique_numbers_coverage': unique_numbers / total_numbers * 100,
+            'unique_numbers_coverage': float(unique_numbers / total_numbers * 100),
             'avg_combination_overlap': avg_overlap,
             'risk_distribution': dict(risk_dist),
             'total_combinations': len(combinations),

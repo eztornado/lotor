@@ -211,6 +211,7 @@ class LightweightPredictor:
             'predicted_key_number': key_number,
             'confidence': 0.55,  # Confianza moderada para modelos ligeros
             'model_used': 'sklearn' if SKLEARN_AVAILABLE else 'xgboost',
+            'number_probabilities': [0.2] * 54,  # Probabilidades uniformes para compatibilidad
             'alternative_combinations': self._generate_alternatives(predicted_numbers, key_number)
         }
 
@@ -231,6 +232,7 @@ class LightweightPredictor:
             'predicted_key_number': key_number,
             'confidence': 0.45,
             'model_used': 'statistical',
+            'number_probabilities': [0.2] * 54,  # Probabilidades uniformes para compatibilidad
             'alternative_combinations': self._generate_alternatives(predicted_numbers, key_number)
         }
 
@@ -247,6 +249,7 @@ class LightweightPredictor:
             'predicted_key_number': key_number,
             'confidence': 0.30,
             'model_used': 'fallback',
+            'number_probabilities': [0.2] * 54,  # Probabilidades uniformes para compatibilidad
             'alternative_combinations': []
         }
 
@@ -314,6 +317,7 @@ class StatisticalPredictor:
             'predicted_key_number': key_number,
             'confidence': 0.45,
             'model_used': 'statistical',
+            'number_probabilities': [0.2] * 54,  # Probabilidades uniformes para compatibilidad
             'hot_numbers': hot_numbers[:10],
             'cold_numbers': cold_numbers[:10],
             'alternative_combinations': []

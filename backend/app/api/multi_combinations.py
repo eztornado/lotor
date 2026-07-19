@@ -8,8 +8,16 @@ from pydantic import BaseModel
 from app.ml.multi_combination import Combination, MultiCombinationGenerator, create_multi_combination_generator
 from app.services.data_sources import create_data_manager
 from app.services.validator import create_validator
-from app.ml.models import create_models, StatisticalPredictor
 from app.core.config import settings
+from app.core.model_loader import get_predictor
+
+# Importación dinámica según disponibilidad de PyTorch
+try:
+    from app.ml.models import StatisticalPredictor
+    HAS_PYTORCH = True
+except ImportError:
+    from app.ml.lightweight_models import StatisticalPredictor
+    HAS_PYTORCH = False
 
 router = APIRouter()
 
@@ -26,7 +34,16 @@ def get_models():
 
     if ensemble_model is None:
         logger.info("Loading ML models...")
-        ensemble_model = create_models(device='cpu')
+        # Usar predictor dinámico según arquitectura
+        from app.core.model_loader import get_predictor
+        predictor = get_predictor()
+
+        # Obtener ensemble y statistical del predictor
+        if hasattr(predictor, 'ensemble_model'):
+            ensemble_model = predictor.ensemble_model
+        else:
+            # Si no hay ensemble, usar el predictor principal como ensemble
+            ensemble_model = predictor
 
     if statistical_model is None:
         statistical_model = StatisticalPredictor()
@@ -97,10 +114,10 @@ async def get_weekly_combinations(num_combinations: int = 7):
         combo_data = []
         for combo in combinations:
             combo_data.append({
-                'numbers': combo.numbers,
-                'key_number': combo.key_number,
+                'numbers': [int(n) for n in combo.numbers],  # Convertir a int nativo
+                'key_number': int(combo.key_number),  # Convertir a int nativo
                 'strategy': combo.strategy,
-                'confidence': combo.confidence,
+                'confidence': float(combo.confidence),  # Convertir a float nativo
                 'description': combo.description,
                 'risk_level': combo.risk_level
             })

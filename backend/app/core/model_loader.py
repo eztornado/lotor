@@ -51,6 +51,19 @@ class ModelLoader:
     @staticmethod
     def get_best_model_type() -> str:
         """Determinar el mejor tipo de modelo para el sistema"""
+        from app.core.config import settings
+
+        # Verificar si hay configuración forzada
+        if hasattr(settings, 'FORCE_LIGHTWEIGHT_MODELS') and settings.FORCE_LIGHTWEIGHT_MODELS:
+            logger.info("Modo ligero forzado por configuración")
+            return 'lightweight'
+
+        if hasattr(settings, 'ML_MODEL_TYPE') and settings.ML_MODEL_TYPE != 'auto':
+            requested_type = settings.ML_MODEL_TYPE
+            logger.info(f"Tipo de modelo solicitado: {requested_type}")
+            if requested_type in ['pytorch', 'lightweight', 'statistical']:
+                return requested_type
+
         architecture = ModelLoader.detect_architecture()
 
         logger.info(f"Arquitectura detectada: {architecture}")

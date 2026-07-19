@@ -10,10 +10,14 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar requirements del backend
-COPY backend/requirements.txt .
+# Copiar requirements del backend (versión sin PyTorch para máxima compatibilidad)
+COPY backend/requirements-no-torch.txt ./requirements.txt
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Configurar variable de entorno para forzar modelos ligeros
+ENV FORCE_LIGHTWEIGHT_MODELS=true
+ENV ML_MODEL_TYPE=lightweight
 
 # Copiar código de la aplicación
 COPY backend/app ./app
