@@ -12,7 +12,7 @@ export default function HistoryPage() {
   const fetchDraws = async (forceRefresh = false) => {
     if (forceRefresh) setRefreshing(true)
     try {
-      const data = await historyApi.getRecent(52)
+      const data = await historyApi.getRecent(200)  // Cambiado de 52 a 200
       setDraws(data)
       setError(null)
     } catch (err: any) {
