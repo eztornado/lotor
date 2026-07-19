@@ -1,0 +1,22 @@
+# LoTor - Requisitos ARM/Raspberry Pi (SIN PyTorch)
+# Versión optimizada para Raspberry Pi 3/4 con ARM
+
+# Core FastAPI
+fastapi==0.115.5
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.6.1
+
+# ML/Stats - Versiones con wheels precompiladas para ARM
+scikit-learn==1.3.2
+xgboost==1.7.6
+numpy==1.24.4
+pandas==2.0.3
+
+# Data fetching
+feedparser==6.0.11
+requests==2.32.3
+aiohttp==3.9.1
+
+# CORS
+python-multipart==0.0.20
