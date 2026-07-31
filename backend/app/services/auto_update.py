@@ -25,6 +25,7 @@ async def check_and_update_on_startup():
                 logger.info(f"✅ Automatic data update successful: {result['lotteries']}")
             else:
                 logger.warning(f"⚠️ Partial data update: {result.get('overall_status')}")
+                # No fallar el inicio si hay actualización parcial
         else:
             next_update = updater.get_next_update_time()
             logger.info(f"✅ Data is up to date. Next update: {next_update}")
@@ -32,7 +33,7 @@ async def check_and_update_on_startup():
     except Exception as e:
         logger.error(f"Error in startup data update check: {e}")
         # No fallar el inicio si hay error en actualización
-        pass
+        logger.info("⚠️ Continuing startup despite data update error")
 
 
 def get_startup_tasks():

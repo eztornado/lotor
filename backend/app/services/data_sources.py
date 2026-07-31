@@ -196,14 +196,17 @@ class CSVSource(DataSourceStrategy):
         logger.info(f"Loading draws from CSV")
 
         try:
-            if self.csv_url:
-                # Descargar CSV remoto
+            # Priorizar CSV local sobre remoto
+            if self.csv_path and Path(self.csv_path).exists():
+                # Cargar CSV local primero
+                df = pd.read_csv(self.csv_path)
+                logger.info(f"✅ Loaded local CSV: {self.csv_path}")
+            elif self.csv_url:
+                # Descargar CSV remoto solo si no hay local
                 response = requests.get(self.csv_url, timeout=30)
                 response.raise_for_status()
                 df = pd.read_csv(pd.io.common.StringIO(response.text))
-            elif self.csv_path:
-                # Cargar CSV local
-                df = pd.read_csv(self.csv_path)
+                logger.info(f"✅ Loaded remote CSV: {self.csv_url}")
             else:
                 logger.error("No CSV path or URL provided")
                 return []
@@ -258,9 +261,22 @@ class RobustDataManager:
             # En Docker, WORKDIR es /app
             if Path("/app/data").exists():
                 data_dir = "/app/data"
-            # En desarrollo local
+            # En desarrollo local - buscar el directorio de datos
             else:
-                data_dir = "./backend/data"
+                # Intentar múltiples rutas posibles
+                possible_paths = [
+                    "./backend/data",           # Ejecutando desde root del proyecto
+                    "./data",                   # Ejecutando desde backend/
+                    "../data",                  # Ejecutando desde subdirectorio
+                    "/home/ubuntu/LoTor/backend/data",  # Ruta absoluta desarrollo
+                ]
+                for path in possible_paths:
+                    if Path(path).exists():
+                        data_dir = path
+                        break
+                else:
+                    # Si no existe ninguna, usar la default
+                    data_dir = "./backend/data"
 
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -281,44 +297,56 @@ class RobustDataManager:
     def get_historical_data(self, force_refresh: bool = False, count: int = 200) -> List[dict]:
         """Obtener datos históricos con estrategia de fallback"""
 
-        # Intentar cargar del cache primero
+        # Intentar cargar del cache primero (prioridad alta)
         if not force_refresh:
             cached = self._load_from_cache()
-            if cached:
-                logger.info(f"Loaded {len(cached)} draws from cache")
+            if cached and len(cached) > 10:  # Asegurar que haya datos suficientes
+                logger.info(f"✅ Loaded {len(cached)} draws from cache")
                 return cached
 
-        # Intentar cada fuente en orden
-        all_draws = []
+        # Intentar cargar del CSV local (fallback primario)
+        logger.info("Cache miss or expired, loading from local CSV...")
+        try:
+            csv_draws = self.csv_source.fetch_draws(count=count)
+            if csv_draws and len(csv_draws) > 10:
+                logger.info(f"✅ Loaded {len(csv_draws)} draws from local CSV")
+                self._save_to_cache(csv_draws)
+                return csv_draws
+        except Exception as e:
+            logger.warning(f"Failed to load local CSV: {e}")
 
-        for source in self.sources:
-            try:
-                draws = source.fetch_draws(count=count)
-                if draws:
-                    all_draws.extend(draws)
-                    logger.info(f"Successfully fetched from {source.__class__.__name__}")
+        # Solo intentar fuentes externas si force_refresh es True
+        if force_refresh:
+            logger.info("Force refresh enabled, trying external sources...")
+            all_draws = []
 
-                    # Guardar en cache
+            for source in self.sources:
+                try:
+                    draws = source.fetch_draws(count=count)
+                    if draws:
+                        all_draws.extend(draws)
+                        logger.info(f"Successfully fetched from {source.__class__.__name__}")
+
+                        # Guardar en cache
+                        self._save_to_cache(all_draws)
+                        return all_draws
+
+                except Exception as e:
+                    logger.warning(f"Failed to fetch from {source.__class__.__name__}: {e}")
+                    continue
+
+            # Si todas las fuentes fallan, intentar CSV
+            if not all_draws:
+                logger.warning("All external sources failed, trying CSV fallback")
+                all_draws = self.csv_source.fetch_draws(count=count)
+
+                if all_draws:
                     self._save_to_cache(all_draws)
                     return all_draws
 
-            except Exception as e:
-                logger.warning(f"Failed to fetch from {source.__class__.__name__}: {e}")
-                continue
-
-        # Si todas las fuentes fallan, intentar CSV
-        if not all_draws:
-            logger.warning("All sources failed, trying CSV fallback")
-            all_draws = self.csv_source.fetch_draws(count=count)
-
-            if all_draws:
-                self._save_to_cache(all_draws)
-                return all_draws
-
         # Si todo falla, generar datos dummy para desarrollo
-        if not all_draws:
-            logger.error("All data sources failed, generating dummy data for development")
-            all_draws = self._generate_dummy_data(count)
+        logger.error("⚠️ All data sources failed, generating dummy data for development")
+        all_draws = self._generate_dummy_data(count)
 
         return all_draws
 

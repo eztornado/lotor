@@ -1,3 +1,4 @@
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -10,10 +11,10 @@ from app.api import predictions, history, stats, multi_combinations
 from app.api.v2 import lotteries, data_updates
 from app.services.auto_update import check_and_update_on_startup
 
-# Configurar logger
+# Configurar logger - fix deadlock issue
 logger.remove()
 logger.add(
-    logger.info,
+    sys.stdout,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
     level="INFO",
 )
