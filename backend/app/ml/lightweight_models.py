@@ -4,10 +4,13 @@ Usa scikit-learn y XGBoost en lugar de PyTorch
 """
 
 import numpy as np
-from typing import List, Dict
+from typing import List, Dict, Optional
 from loguru import logger
 from collections import Counter
 import random
+from pathlib import Path
+import hashlib
+import joblib
 
 try:
     import xgboost as xgb
@@ -28,13 +31,78 @@ except ImportError:
 class LightweightPredictor:
     """Predictor ligero sin PyTorch para dispositivos ARM"""
 
-    def __init__(self):
+    def __init__(self, model_path: Optional[str] = None):
         self.models = {}
         self.scalers = {}
         self.is_trained = False
+        self.model_path = model_path or "/app/data/processed/lightweight_model.joblib"
+        self.training_data_hash = None
 
-    def train(self, historical_data: List[dict]):
+        # Intentar cargar modelo existente
+        self._load_model()
+
+    def _get_data_hash(self, historical_data: List[dict]) -> str:
+        """Calcular hash de los datos para detectar cambios"""
+        # Usar fecha del último sorteo como identificador
+        if historical_data:
+            last_date = str(max([d['date'] for d in historical_data if d.get('date')]))
+            count = len(historical_data)
+            return hashlib.md5(f"{last_date}_{count}".encode()).hexdigest()
+        return ""
+
+    def _save_model(self):
+        """Guardar modelo entrenado a disco"""
+        try:
+            model_dir = Path(self.model_path).parent
+            model_dir.mkdir(parents=True, exist_ok=True)
+
+            model_data = {
+                'models': self.models,
+                'scalers': self.scalers,
+                'is_trained': self.is_trained,
+                'training_data_hash': self.training_data_hash,
+                'sklearn_version': SKLEARN_AVAILABLE
+            }
+
+            joblib.dump(model_data, self.model_path)
+            logger.info(f"Model saved to {self.model_path}")
+        except Exception as e:
+            logger.warning(f"Could not save model: {e}")
+
+    def _load_model(self):
+        """Cargar modelo entrenado desde disco"""
+        try:
+            if not Path(self.model_path).exists():
+                logger.info("No saved model found, will train from scratch")
+                return False
+
+            model_data = joblib.load(self.model_path)
+
+            # Verificar compatibilidad
+            if model_data.get('sklearn_version') != SKLEARN_AVAILABLE:
+                logger.warning("Saved model incompatible, will retrain")
+                return False
+
+            self.models = model_data['models']
+            self.scalers = model_data['scalers']
+            self.is_trained = model_data['is_trained']
+            self.training_data_hash = model_data.get('training_data_hash')
+
+            logger.info(f"Model loaded from {self.model_path}")
+            return True
+        except Exception as e:
+            logger.warning(f"Could not load model: {e}")
+            return False
+
+    def train(self, historical_data: List[dict], force_retrain: bool = False):
         """Entrenar con datos históricos"""
+        # Verificar si necesitamos reentrenar
+        new_data_hash = self._get_data_hash(historical_data)
+
+        if not force_retrain and self.is_trained and self.training_data_hash == new_data_hash:
+            logger.info("Model already trained with current data, skipping training")
+            return True
+
         logger.info("Training lightweight ML models...")
 
         if not historical_data:
@@ -53,10 +121,15 @@ class LightweightPredictor:
             self._train_statistical_models(historical_data)
 
         self.is_trained = True
+        self.training_data_hash = new_data_hash
+
+        # Guardar modelo entrenado
+        self._save_model()
+
         return True
 
     def _prepare_training_data(self, historical_data: List[dict]):
-        """Preparar datos para entrenamiento"""
+        """Preparar datos para entrenamiento con features mejorados"""
         X_numbers = []
         X_keys = []
         y_numbers = []
@@ -67,8 +140,8 @@ class LightweightPredictor:
             current_draw = historical_data[i]
             next_draw = historical_data[i + 1]
 
-            # Features del sorteo actual
-            features = self._extract_features(current_draw)
+            # Features del sorteo actual con contexto
+            features = self._extract_features(current_draw, historical_data[:i+1])
 
             # Targets (próximo sorteo)
             targets_numbers = next_draw['numbers']
@@ -81,11 +154,13 @@ class LightweightPredictor:
 
         return np.array(X_numbers), np.array(X_keys), np.array(y_numbers), np.array(y_keys)
 
-    def _extract_features(self, draw: dict) -> List[float]:
-        """Extraer features de un sorteo"""
-        numbers = draw['numbers']
+    def _extract_features(self, draw: dict, historical_context: List[dict] = None) -> List[float]:
+        """Extraer features avanzados de un sorteo"""
+        numbers = sorted(draw['numbers'])  # Ordenar para análisis posicional
         date = draw.get('date')
-        return [
+
+        # Features básicos
+        basic = [
             sum(numbers),  # Suma
             np.mean(numbers),  # Media
             np.std(numbers),  # Desviación estándar
@@ -93,31 +168,92 @@ class LightweightPredictor:
             max(numbers),  # Máximo
             max(numbers) - min(numbers),  # Rango
             len([n for n in numbers if n % 2 == 1]),  # Números impares
-            draw['key_number'],  # Número clave anterior
-            date.weekday() if date else 0,  # Día de la semana (0 si no hay fecha)
-            date.month if date else 1  # Mes (1 si no hay fecha)
+            len([n for n in numbers if n <= 18]),  # Números en rango bajo (1-18)
+            len([n for n in numbers if 19 <= n <= 36]),  # Números en rango medio (19-36)
+            len([n for n in numbers if n >= 37]),  # Números en rango alto (37-54)
         ]
 
+        # Features de consecutivos
+        consecutive = 0
+        for i in range(len(numbers) - 1):
+            if numbers[i+1] - numbers[i] == 1:
+                consecutive += 1
+
+        # Features de patrones
+        pattern = [
+            consecutive,  # Pares consecutivos
+            len(set([n % 10 for n in numbers])),  # Últimos dígitos únicos
+            sum([n % 3 == 0 for n in numbers]),  # Múltiplos de 3
+            sum([n % 5 == 0 for n in numbers]),  # Múltiplos de 5
+        ]
+
+        # Features temporales
+        temporal = [
+            date.weekday() if date else 0,  # Día de la semana
+            date.month if date else 1,  # Mes
+            date.day if date else 1,  # Día del mes
+        ]
+
+        # Features contextuales (si hay historial)
+        context = []
+        if historical_context and len(historical_context) > 1:
+            # Frecuencia de números recientes
+            recent_numbers = []
+            for h in historical_context[-10:]:
+                recent_numbers.extend(h['numbers'])
+
+            freq = Counter(recent_numbers)
+            overlap = sum([1 for n in numbers if freq.get(n, 0) >= 2])
+            context.extend([
+                overlap,  # Números que aparecen frecuentemente
+                len(set(numbers) & set(recent_numbers[-5:] if len(recent_numbers) >= 5 else recent_numbers)),  # Overlap con sorteo anterior
+            ])
+        else:
+            context = [0, 0]
+
+        return basic + pattern + temporal + context + [draw['key_number']]
+
     def _train_sklearn_models(self, X_numbers, X_keys, y_numbers, y_keys):
-        """Entrenar modelos scikit-learn"""
-        logger.info("Training scikit-learn models...")
+        """Entrenar modelos scikit-learn mejorados"""
+        logger.info("Training scikit-learn models with improved architecture...")
 
         # Escalar features
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X_numbers)
         self.scalers['features'] = scaler
 
-        # Para cada posición de número (1-5)
+        # Para cada posición de número (1-5) con modelo más potente
         for i in range(5):
             y_pos = [nums[i] for nums in y_numbers]
-            rf = RandomForestClassifier(n_estimators=50, max_depth=10, random_state=42)
-            rf.fit(X_scaled, y_pos)
-            self.models[f'number_{i}'] = rf
 
-        # Para número clave
-        rf_key = RandomForestClassifier(n_estimators=30, max_depth=8, random_state=42)
-        rf_key.fit(X_scaled, y_keys)
-        self.models['key_number'] = rf_key
+            # Usar GradientBoosting en lugar de RandomForest para mejor precisión
+            gb = GradientBoostingClassifier(
+                n_estimators=150,  # Aumentado de 50
+                max_depth=7,  # Aumentado de 10
+                learning_rate=0.05,  # Learning rate bajo para mejor generalización
+                min_samples_split=5,
+                min_samples_leaf=2,
+                subsample=0.8,  # Stochastic gradient boosting
+                random_state=42
+            )
+            gb.fit(X_scaled, y_pos)
+            self.models[f'number_{i}'] = gb
+
+            logger.info(f"  Model for position {i} trained - {len(set(y_pos))} unique values")
+
+        # Para número clave con GradientBoosting también
+        gb_key = GradientBoostingClassifier(
+            n_estimators=100,
+            max_depth=5,
+            learning_rate=0.05,
+            min_samples_split=3,
+            subsample=0.8,
+            random_state=42
+        )
+        gb_key.fit(X_scaled, y_keys)
+        self.models['key_number'] = gb_key
+
+        logger.info(f"  Key number model trained - {len(set(y_keys))} unique values")
 
     def _train_xgboost_models(self, X_numbers, X_keys, y_numbers, y_keys):
         """Entrenar modelos XGBoost"""
@@ -181,10 +317,16 @@ class LightweightPredictor:
             return self._fallback_prediction(sequence)
 
     def _ml_prediction(self, sequence: List[List[int]]) -> Dict:
-        """Predicción usando modelos ML"""
-        # Extraer features del último sorteo
+        """Predicción usando modelos ML con features mejorados"""
+        # Extraer features del último sorteo con contexto
         last_draw = {'numbers': sequence[-1][:5], 'key_number': sequence[-1][5], 'date': None}
-        features = np.array([self._extract_features(last_draw)])
+
+        # Crear contexto histórico para features
+        historical_context = []
+        for seq in sequence[-10:]:  # Últimos 10 sorteos como contexto
+            historical_context.append({'numbers': seq[:5], 'key_number': seq[5], 'date': None})
+
+        features = np.array([self._extract_features(last_draw, historical_context)])
 
         # Escalar si está disponible
         if 'features' in self.scalers:
@@ -207,14 +349,72 @@ class LightweightPredictor:
         else:
             key_number = random.randint(0, 9)
 
+        # Calcular confianza basada en predicciones (más sofisticado)
+        confidence = self._calculate_prediction_confidence(predicted_numbers, sequence)
+
         return {
             'predicted_numbers': sorted(predicted_numbers),
             'predicted_key_number': key_number,
-            'confidence': 0.55,  # Confianza moderada para modelos ligeros
+            'confidence': confidence,
             'model_used': 'sklearn' if SKLEARN_AVAILABLE else 'xgboost',
-            'number_probabilities': [0.2] * 54,  # Probabilidades uniformes para compatibilidad
+            'number_probabilities': self._calculate_number_probabilities(predicted_numbers, sequence),
             'alternative_combinations': self._generate_alternatives(predicted_numbers, key_number)
         }
+
+    def _calculate_prediction_confidence(self, predicted_numbers: List[int], sequence: List[List[int]]) -> float:
+        """Calcular confianza basada en análisis estadístico"""
+        if not sequence:
+            return 0.5
+
+        # Analizar últimos 20 sorteos
+        recent_numbers = []
+        for seq in sequence[-20:]:
+            recent_numbers.extend(seq[:5])
+
+        freq = Counter(recent_numbers)
+
+        # Verificar cuántos números predichos son frecuentes
+        high_freq_count = sum([1 for n in predicted_numbers if freq.get(n, 0) >= 3])
+        confidence_base = 0.4 + (high_freq_count * 0.05)
+
+        # Ajustar según patrón de rango
+        range_distribution = [
+            sum([1 for n in predicted_numbers if n <= 18]),
+            sum([1 for n in predicted_numbers if 19 <= n <= 36]),
+            sum([1 for n in predicted_numbers if n >= 37])
+        ]
+
+        # Bonificación si está bien distribuido
+        if all([c >= 1 for c in range_distribution]):
+            confidence_base += 0.1
+
+        return min(confidence_base, 0.75)
+
+    def _calculate_number_probabilities(self, predicted_numbers: List[int], sequence: List[List[int]]) -> List[float]:
+        """Calcular probabilidades para todos los números"""
+        if not sequence:
+            return [1.0/54] * 54
+
+        # Analizar frecuencias recientes
+        recent_numbers = []
+        for seq in sequence[-30:]:
+            recent_numbers.extend(seq[:5])
+
+        freq = Counter(recent_numbers)
+        total_count = len(recent_numbers)
+
+        # Calcular probabilidades basadas en frecuencia
+        probabilities = []
+        for num in range(1, 55):
+            prob = freq.get(num, 0) / total_count if total_count > 0 else 1.0/54
+            # Suavizar con uniforme para evitar extremos
+            probabilities.append(0.7 * prob + 0.3 * (1.0/54))
+
+        # Normalizar
+        total = sum(probabilities)
+        probabilities = [p/total for p in probabilities]
+
+        return probabilities
 
     def _statistical_prediction(self, sequence: List[List[int]]) -> Dict:
         """Predicción usando modelos estadísticos"""

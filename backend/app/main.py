@@ -2,10 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from contextlib import asynccontextmanager
 import os
 from loguru import logger
 from app.core.config import settings
 from app.api import predictions, history, stats, multi_combinations
+from app.api.v2 import lotteries, data_updates
+from app.services.auto_update import check_and_update_on_startup
 
 # Configurar logger
 logger.remove()
@@ -15,11 +18,26 @@ logger.add(
     level="INFO",
 )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifecycle manager para startup/shutdown"""
+    # Startup
+    logger.info("🚀 Starting LoTor API...")
+    await check_and_update_on_startup()
+    logger.info("✅ LoTor API ready")
+
+    yield
+
+    # Shutdown
+    logger.info("👋 Shutting down LoTor API...")
+
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="API de predicción para El Gordo de la Primitiva",
+    description="API de predicción multi-lotería con actualización automática",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan
 )
 
 # Configurar CORS
@@ -41,6 +59,10 @@ app.include_router(history.router, prefix=f"{settings.API_V1_STR}/history", tags
 app.include_router(stats.router, prefix=f"{settings.API_V1_STR}/stats", tags=["stats"])
 app.include_router(multi_combinations.router, prefix=f"{settings.API_V1_STR}/combinations", tags=["combinations"])
 
+# API v2 - Multi-lotería
+app.include_router(lotteries.router, prefix="/api/v2", tags=["lotteries-v2"])
+app.include_router(data_updates.router, prefix="/api/v2", tags=["data-updates-v2"])
+
 
 @app.get("/")
 async def root():
@@ -50,9 +72,15 @@ async def root():
         return FileResponse(frontend_path, media_type="text/html")
     else:
         return {
-            "message": "LoTor API - Sistema de Predicción El Gordo de la Primitiva",
+            "message": "LoTor API - Sistema de Predicción Multi-Lotería",
             "version": settings.VERSION,
             "docs": "/docs",
+            "features": [
+                "Multi-lotería (Primitiva + Sorteo Nacional)",
+                "Actualización automática de datos cada 6 horas",
+                "Predicciones con sklearn optimizado",
+                "API unificada para todas las loterías"
+            ]
         }
 
 
@@ -66,14 +94,23 @@ async def health_check():
 async def api_info():
     """Endpoint info API"""
     return {
-        "message": "LoTor API - Sistema de Predicción El Gordo de la Primitiva",
+        "message": "LoTor API - Sistema de Predicción Multi-Lotería",
         "version": settings.VERSION,
         "docs": "/docs",
         "endpoints": {
             "predictions": "/api/v1/predictions",
             "history": "/api/v1/history",
             "stats": "/api/v1/stats",
-            "combinations": "/api/v1/combinations"
+            "combinations": "/api/v1/combinations",
+            "lotteries": "/api/v2/lotteries",
+            "multi_predictions": "/api/v2/predictions/all",
+            "data_updates": "/api/v2/data-update/*"
+        },
+        "features": {
+            "auto_update": "Cada 6 horas",
+            "supported_lotteries": ["primitiva", "nacional"],
+            "ml_models": ["sklearn", "statistical"],
+            "next_update": "GET /api/v2/data-update/status"
         }
     }
 

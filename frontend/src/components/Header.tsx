@@ -1,10 +1,11 @@
 import { Group, Anchor, Text, Burger, Drawer, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconHome, IconBrain, IconChartBar, IconHistory, IconTarget } from '@tabler/icons-react'
+import { IconHome, IconBrain, IconChartBar, IconHistory, IconTarget, IconApps } from '@tabler/icons-react'
 import { Link, useLocation } from 'react-router-dom'
 
 const navigation = [
   { name: 'Inicio', href: '/', icon: IconHome },
+  { name: 'Multi-Lotería', href: '/lotteries', icon: IconApps },
   { name: 'Predicción', href: '/prediction', icon: IconBrain },
   { name: 'Estadísticas', href: '/statistics', icon: IconChartBar },
   { name: 'Historial', href: '/history', icon: IconHistory },
@@ -46,7 +47,7 @@ export default function Header() {
               🎱 LoTor
             </Text>
           </Anchor>
-          <Text size="sm" c="dimmed">Predicciones El Gordo de la Primitiva</Text>
+          <Text size="sm" c="dimmed">Sistema de Predicción Multi-Lotería</Text>
         </Group>
 
         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />

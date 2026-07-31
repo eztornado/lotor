@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # ML Models
     MODELS_PATH: str = "./app/ml/models"
     MAX_HISTORY_LENGTH: int = 200  # Semanas de historial a usar (aumentado para mejor precisión)
-    FORCE_LIGHTWEIGHT_MODELS: bool = False  # Forzar modelos ligeros sin PyTorch
+    FORCE_LIGHTWEIGHT_MODELS: bool = True  # Forzar modelos ligeros sin PyTorch (default True para compatibilidad)
     ML_MODEL_TYPE: str = "auto"  # Opciones: "auto", "pytorch", "lightweight", "statistical"
 
     # El Gordo de la Primitiva Config

@@ -252,7 +252,16 @@ class CSVSource(DataSourceStrategy):
 class RobustDataManager:
     """Gestor robusto de datos con múltiples fuentes y fallback"""
 
-    def __init__(self, data_dir: str = "./backend/data"):
+    def __init__(self, data_dir: str = None):
+        # Detectar si estamos en Docker o en local
+        if data_dir is None:
+            # En Docker, WORKDIR es /app
+            if Path("/app/data").exists():
+                data_dir = "/app/data"
+            # En desarrollo local
+            else:
+                data_dir = "./backend/data"
+
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
