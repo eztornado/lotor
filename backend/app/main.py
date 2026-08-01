@@ -24,7 +24,24 @@ async def lifespan(app: FastAPI):
     """Lifecycle manager para startup/shutdown"""
     # Startup
     logger.info("🚀 Starting LoTor API...")
-    await check_and_update_on_startup()
+
+    # Cargar datos y entrenar modelos en background
+    import asyncio
+    from app.services.data_updater import get_data_updater
+
+    async def startup_tasks():
+        try:
+            updater = get_data_updater()
+            logger.info("Loading lottery data in background...")
+            if updater.should_update():
+                result = updater.update_all_lotteries()
+                logger.info(f"Data update completed: {result['overall_status']}")
+        except Exception as e:
+            logger.error(f"Error in background startup tasks: {e}")
+
+    # Arrancar el servidor primero, luego cargar datos
+    asyncio.create_task(startup_tasks())
+
     logger.info("✅ LoTor API ready")
 
     yield

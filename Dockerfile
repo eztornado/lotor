@@ -22,8 +22,14 @@ ENV ML_MODEL_TYPE=lightweight
 # Copiar código de la aplicación
 COPY backend/app ./app
 
-# Copiar datos históricos (incluye el CSV actualizado)
+# Copiar datos históricos (incluye el CSV expandido del Sorteo Nacional)
 COPY backend/data ./data
+
+# Verificar que los datos expandidos estén presentes
+RUN ls -la /app/data/raw/ && \
+    test -f /app/data/raw/nacional_historical_expanded.csv && \
+    echo "✅ Nacional expanded data found" || \
+    echo "⚠️ Warning: Nacional expanded data not found"
 
 # Copiar frontend construido
 COPY frontend/dist ./frontend
@@ -34,8 +40,8 @@ RUN mkdir -p data/raw data/processed app/ml/models logs
 # Exponer puerto
 EXPOSE 8000
 
-# Health check - increased start period for data loading and model training
-HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=5 \
+# Health check - extended start period for sklearn model training (3+ minutes)
+HEALTHCHECK --interval=30s --timeout=20s --start-period=180s --retries=10 \
   CMD curl -f http://localhost:8000/health || exit 1
 
 # Comando de inicio
