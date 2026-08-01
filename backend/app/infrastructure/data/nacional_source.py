@@ -116,6 +116,7 @@ class NacionalCSVSource(DataSource):
                     raw_data.get('n1') or raw_data.get('numero1') or raw_data.get('N1'),
                     raw_data.get('n2') or raw_data.get('numero2') or raw_data.get('N2'),
                     raw_data.get('n3') or raw_data.get('numero3') or raw_data.get('N3'),
+                    raw_data.get('n4') or raw_data.get('numero4') or raw_data.get('N4'),
                 ]
                 serie = raw_data.get('serie') or raw_data.get('serie') or 0
                 fraccion = raw_data.get('fraccion') or raw_data.get('fraccion') or 1

@@ -3,10 +3,8 @@
  * Muestra información de predicción para cualquier tipo de lotería
  */
 
-import React from 'react';
 import { Card, Text, Group, Badge, Button, Stack, Box, Alert } from '@mantine/core';
 import {
-  IconCalendar,
   IconTrophy,
   IconBrain,
   IconAlertTriangle,

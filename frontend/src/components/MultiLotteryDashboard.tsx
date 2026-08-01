@@ -3,7 +3,7 @@
  * Muestra predicciones para todos los tipos de lotería soportados
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Title,
@@ -23,7 +23,7 @@ import { LotteryCard } from './LotteryCard';
 
 export function MultiLotteryDashboard() {
   const [lotteries, setLotteries] = useState<LotteryInfo[]>([]);
-  const [predictions, setPredictions] = useState<Record<LotteryType, PredictionResult>>({});
+  const [predictions, setPredictions] = useState<Record<LotteryType, PredictionResult>>({} as Record<LotteryType, PredictionResult>);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -115,7 +115,11 @@ export function MultiLotteryDashboard() {
         <Grid>
           {lotteries.map((lottery) => {
             const prediction = predictions[lottery.type as LotteryType];
-            if (!prediction) return null;
+            // Skip if no prediction or prediction has error
+            if (!prediction || (prediction as any).error) {
+              console.warn(`No valid prediction for ${lottery.type}:`, prediction);
+              return null;
+            }
 
             return (
               <Grid.Col key={lottery.type} span={{ base: 12, md: 6, lg: 4 }}>
