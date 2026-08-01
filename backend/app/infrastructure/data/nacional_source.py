@@ -59,7 +59,29 @@ class NacionalCSVSource(DataSource):
     """Fuente de datos desde CSV local para Sorteo Nacional"""
 
     def __init__(self, csv_path: Optional[str] = None):
-        self.csv_path = csv_path or "/app/data/raw/nacional_historical.csv"
+        # Detectar ruta correcta para datos
+        if csv_path is None:
+            # Intentar múltiples rutas posibles (priorizar archivo expandido)
+            possible_paths = [
+                "/app/data/raw/nacional_historical_expanded.csv",  # Docker (expandido)
+                "./backend/data/raw/nacional_historical_expanded.csv",  # Local (expandido)
+                "./data/raw/nacional_historical_expanded.csv",  # Backend directory (expandido)
+                "/app/data/raw/nacional_historical.csv",  # Docker (original)
+                "./backend/data/raw/nacional_historical.csv",  # Local development (original)
+                "./data/raw/nacional_historical.csv",  # Backend directory (original)
+                "../data/raw/nacional_historical.csv",  # Subdirectory (original)
+                "/home/ubuntu/LoTor/backend/data/raw/nacional_historical_expanded.csv",  # Absolute path (expandido)
+                "/home/ubuntu/LoTor/backend/data/raw/nacional_historical.csv",  # Absolute path (original)
+            ]
+            for path in possible_paths:
+                if Path(path).exists():
+                    csv_path = path
+                    break
+            else:
+                # Default to first option if none exist
+                csv_path = possible_paths[0]
+
+        self.csv_path = csv_path
 
     def fetch_draws(self, count: int = 200) -> List[DrawResult]:
         """Obtener sorteos desde CSV local"""
