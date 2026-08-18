@@ -255,7 +255,7 @@ class NacionalDataManager:
 
             if updated_draws:
                 # Guardar en el archivo CSV
-                csv_path = "/home/ubuntu/LoTor/backend/data/raw/nacional_historical_expanded.csv"
+                csv_path = "/app/data/raw/nacional_historical_expanded.csv"
                 save_to_csv(updated_draws, csv_path)
 
                 # Actualizar control de semana

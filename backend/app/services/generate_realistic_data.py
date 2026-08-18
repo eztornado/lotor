@@ -77,6 +77,10 @@ def generate_realistic_historical_data(count: int = 238) -> list:
 
 def save_to_csv(draws: list, filepath: str):
     """Guardar los sorteos en un archivo CSV"""
+    # Crear directorio si no existe
+    import os
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
     df = pd.DataFrame(draws)
     df = df.sort_values('date', ascending=False)
     df.to_csv(filepath, index=False)
@@ -91,7 +95,7 @@ def main():
         draws = generate_realistic_historical_data(count=238)
 
         # Guardar en CSV
-        csv_path = "/home/ubuntu/LoTor/backend/data/raw/nacional_historical_expanded.csv"
+        csv_path = "/app/data/raw/nacional_historical_expanded.csv"
         save_to_csv(draws, csv_path)
 
         logger.info(f"✅ Successfully updated Sorteo Nacional data: {len(draws)} draws")

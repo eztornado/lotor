@@ -40,7 +40,7 @@ class PredictionResult(BaseModel):
     model_used: str
     strategy_used: str
     analysis: Dict[str, Any] = {}
-    alternative_combinations: List[Dict[str, Any]] = []
+    alternative_combinations: List[List[int]] = []
 
     class Config:
         use_enum_values = True

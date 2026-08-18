@@ -32,7 +32,7 @@ def update_nacional_data():
             draws = scraper.generate_realistic_historical_data(count=238)
 
         # Guardar en CSV
-        csv_path = "/home/ubuntu/LoTor/backend/data/raw/nacional_historical_expanded.csv"
+        csv_path = "/app/data/raw/nacional_historical_expanded.csv"
         scraper.save_to_csv(draws, csv_path)
 
         logger.info(f"✅ Successfully updated Sorteo Nacional data: {len(draws)} draws")
