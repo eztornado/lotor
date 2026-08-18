@@ -375,12 +375,12 @@ class NacionalPredictor(LotteryPredictor):
         for pos in range(4):
             y_pos = y_positions[pos]
 
-            # Usar GradientBoosting para mejor precisión
+            # Usar GradientBoosting optimizado para velocidad
             gb_model = GradientBoostingClassifier(
-                n_estimators=100,  # Ajustado para números grandes
-                max_depth=5,      # Profundidad moderada
-                learning_rate=0.05,
-                min_samples_split=3,
+                n_estimators=25,   # Reducido para velocidad (de 100 a 25)
+                max_depth=3,       # Reducido profundidad (de 5 a 3)
+                learning_rate=0.1, # Aumentado para compensar menos árboles (de 0.05 a 0.1)
+                min_samples_split=5, # Aumentado para evitar overfitting (de 3 a 5)
                 subsample=0.8,
                 random_state=42
             )

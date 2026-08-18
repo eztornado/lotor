@@ -226,14 +226,14 @@ class LightweightPredictor:
         for i in range(5):
             y_pos = [nums[i] for nums in y_numbers]
 
-            # Usar GradientBoosting en lugar de RandomForest para mejor precisión
+            # Usar GradientBoosting optimizado para velocidad
             gb = GradientBoostingClassifier(
-                n_estimators=150,  # Aumentado de 50
-                max_depth=7,  # Aumentado de 10
-                learning_rate=0.05,  # Learning rate bajo para mejor generalización
+                n_estimators=30,   # Reducido drásticamente para velocidad (de 150 a 30)
+                max_depth=4,       # Reducido profundidad (de 7 a 4)
+                learning_rate=0.1, # Aumentado para compensar (de 0.05 a 0.1)
                 min_samples_split=5,
                 min_samples_leaf=2,
-                subsample=0.8,  # Stochastic gradient boosting
+                subsample=0.8,
                 random_state=42
             )
             gb.fit(X_scaled, y_pos)
@@ -241,11 +241,11 @@ class LightweightPredictor:
 
             logger.info(f"  Model for position {i} trained - {len(set(y_pos))} unique values")
 
-        # Para número clave con GradientBoosting también
+        # Para número clave con GradientBoosting optimizado
         gb_key = GradientBoostingClassifier(
-            n_estimators=100,
-            max_depth=5,
-            learning_rate=0.05,
+            n_estimators=20,   # Reducido para velocidad (de 100 a 20)
+            max_depth=3,       # Reducido profundidad (de 5 a 3)
+            learning_rate=0.1, # Aumentado para compensar (de 0.05 a 0.1)
             min_samples_split=3,
             subsample=0.8,
             random_state=42
