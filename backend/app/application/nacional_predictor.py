@@ -317,7 +317,7 @@ class NacionalPredictor(LotteryPredictor):
                 self.statistical_data['fraccion_distribution'].append(draw['fraccion'])
 
     def _generate_alternatives(self, main_numbers: List[int], serie: int, fraccion: int,
-                              historical_data: List[DrawResult], n: int = 3) -> List[dict]:
+                              historical_data: List[DrawResult], n: int = 3) -> List[List[int]]:
         """Generar combinaciones alternativas"""
 
         alternatives = []
@@ -329,17 +329,7 @@ class NacionalPredictor(LotteryPredictor):
             if alt_numbers and len(hot_decimos) > 0:
                 alt_numbers[0] = random.choice([n for n in hot_decimos if n not in alt_numbers])
 
-            # Variar ligeramente serie/fracción
-            alt_serie = (serie + i + 1) % 10
-            alt_fraccion = ((fraccion + i * 7) % 100) + 1
-
-            alternatives.append({
-                'numbers': alt_numbers,
-                'serie': alt_serie,
-                'fraccion': alt_fraccion,
-                'strategy': 'variation',
-                'confidence': 0.35
-            })
+            alternatives.append(sorted(alt_numbers))
 
         return alternatives
 
