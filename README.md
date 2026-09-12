@@ -2,6 +2,8 @@
 
 Sistema de predicción basado en Inteligencia Artificial para El Gordo de la Primitiva (España).
 
+Proyecto de ejemplo en producción: https://lotor.tornadocore.es/
+
 ## 📋 Reglas del Juego
 
 - **5 números** del 1 al 54
