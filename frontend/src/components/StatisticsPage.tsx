@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Container, Title, Stack, Paper, Grid, Card, Text, Loader, Badge, Progress, Box } from '@mantine/core'
+import { Title, Stack, Paper, Grid, Card, Group, Text, Loader, Badge, Progress, Box } from '@mantine/core'
 import { statsApi, NumberStats, KeyNumberStats } from '../services/api'
 
 export default function StatisticsPage() {

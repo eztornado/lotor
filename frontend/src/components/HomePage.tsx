@@ -1,6 +1,6 @@
-import { Container, Title, Text, Stack, Paper, Grid, Card, Group, Button, Badge, Alert } from '@mantine/core'
+import { Title, Text, Stack, Paper, Grid, Card, Group, Button, Badge } from '@mantine/core'
 import { Link } from 'react-router-dom'
-import { IconBrain, IconChartBar, IconHistory, IconArrowRight, IconTarget } from '@tabler/icons-react'
+import { IconBrain, IconChartBar, IconHistory, IconArrowRight, IconTarget, IconClover } from '@tabler/icons-react'
 
 export default function HomePage() {
   return (
@@ -17,7 +17,7 @@ export default function HomePage() {
           <Card shadow="md" padding="xl" radius="md" withBorder style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
             <Stack gap="md">
               <Group justify="space-between">
-                <IconTarget size={48} c="white" />
+                <IconTarget size={48} color="white" />
                 <Badge size="xl" color="white" variant="light">NUEVO</Badge>
               </Group>
               <Title order={2} c="white">🎯 Sistema de 7 Combinaciones Semanales</Title>
@@ -45,7 +45,26 @@ export default function HomePage() {
           <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
             <Stack gap="md">
               <Group justify="space-between">
-                <IconBrain size={32} c="blue.4" />
+                <IconClover size={32} color="grape" />
+                <Badge color="grape" variant="light">NUEVO</Badge>
+              </Group>
+              <Title order={3}>🍀 Bonoloto</Title>
+              <Text size="sm" c="dimmed">
+                Cartera optimizada de hasta 10 apuestas usando el histórico completo desde 1988,
+                cobertura de números y anti-popularidad.
+              </Text>
+              <Button component={Link} to="/bonoloto" rightSection={<IconArrowRight size={16} />} color="grape">
+                Generar Bonoloto
+              </Button>
+            </Stack>
+          </Card>
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
+            <Stack gap="md">
+              <Group justify="space-between">
+                <IconBrain size={32} color="blue" />
                 <Badge color="blue" variant="light">IA/ML</Badge>
               </Group>
               <Title order={3}>Predicción Única</Title>
@@ -63,7 +82,7 @@ export default function HomePage() {
           <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
             <Stack gap="md">
               <Group justify="space-between">
-                <IconChartBar size={32} c="green.4" />
+                <IconChartBar size={32} color="green" />
                 <Badge color="green" variant="light">Análisis</Badge>
               </Group>
               <Title order={3}>Estadísticas Detalladas</Title>
@@ -81,7 +100,7 @@ export default function HomePage() {
           <Card shadow="sm" padding="lg" radius="md" withBorder h="100%">
             <Stack gap="md">
               <Group justify="space-between">
-                <IconHistory size={32} c="orange.4" />
+                <IconHistory size={32} color="orange" />
                 <Badge color="orange" variant="light">Datos</Badge>
               </Group>
               <Title order={3}>Historial Completo</Title>
@@ -110,6 +129,24 @@ export default function HomePage() {
           </Text>
           <Text size="sm">
             • Premio Gordo: 5 números + número clave
+          </Text>
+        </Stack>
+      </Paper>
+
+      <Paper shadow="xs" p="md" withBorder>
+        <Stack gap="sm">
+          <Title order={3}>🍀 Sobre Bonoloto</Title>
+          <Text size="sm">
+            • Selecciona <strong>6 números</strong> del 1 al 49
+          </Text>
+          <Text size="sm">
+            • Se añade un <strong>complementario</strong> y un <strong>reintegro</strong> (0–9)
+          </Text>
+          <Text size="sm">
+            • Sorteo de <strong>lunes a sábado</strong>
+          </Text>
+          <Text size="sm">
+            • Cartera optimizada de <strong>1 a 10 apuestas</strong> con histórico desde 1988
           </Text>
         </Stack>
       </Paper>

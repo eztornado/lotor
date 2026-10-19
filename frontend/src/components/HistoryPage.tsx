@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Container, Title, Stack, Paper, Card, Text, Loader, Badge, Group, Button, Alert } from '@mantine/core'
+import { Title, Stack, Paper, Card, Text, Loader, Badge, Group, Button, Alert } from '@mantine/core'
 import { IconRefresh, IconInfoCircle } from '@tabler/icons-react'
 import { historyApi, DrawResult } from '../services/api'
 

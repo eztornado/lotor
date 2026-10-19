@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import {
-  Container, Title, Stack, Paper, Grid, Card, Group, Button, Badge,
-  Alert, Text, Loader, NumberInput, ActionIcon, Box
+  Title, Stack, Paper, Grid, Card, Group, Button, Badge,
+  Alert, Text, Loader, NumberInput, Box
 } from '@mantine/core'
-import { IconBrain, IconRefresh, IconInfoCircle, IconArrowRight, IconAlertTriangle } from '@tabler/icons-react'
+import { IconRefresh, IconInfoCircle, IconAlertTriangle } from '@tabler/icons-react'
 import { predictionsApi } from '../services/api'
 
 interface Prediction {

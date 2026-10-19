@@ -1,14 +1,24 @@
-# LoTor - Sistema de Predicción El Gordo de la Primitiva
+# LoTor - Sistema de Predicción El Gordo de la Primitiva y Bonoloto
 
-Sistema de predicción basado en Inteligencia Artificial para El Gordo de la Primitiva (España).
+Sistema de predicción basado en Inteligencia Artificial para El Gordo de la Primitiva y generador inteligente de carteras para Bonoloto (España).
 
 Proyecto de ejemplo en producción: https://lotor.tornadocore.es/
 
 ## 📋 Reglas del Juego
 
+### El Gordo de la Primitiva
+
 - **5 números** del 1 al 54
 - **1 número clave** del 0 al 9
 - Sorteo todos los domingos
+
+### Bonoloto
+
+- **6 números** del 1 al 49 + **complementario** + **reintegro** (0–9)
+- Sorteo de **lunes a sábado**
+- Generador de carteras de **1 a 10 apuestas** con histórico desde 1988
+
+[Ver documentación completa de Bonoloto](docs/BONOLOTO.md)
 
 ## 🏗️ Arquitectura
 
@@ -98,10 +108,24 @@ El sistema usa **estrategia de fallback** automática: si una fuente falla, inte
 
 ## 📡 API Endpoints
 
+### El Gordo de la Primitiva
+
 - `GET /api/history` - Obtener historial de sorteos
 - `POST /api/predict` - Obtener predicción para la próxima semana
 - `GET /api/stats` - Estadísticas de números
 - `GET /api/models` - Información sobre modelos
+
+### Bonoloto (`/api/v1/bonoloto`)
+
+- `GET /meta` - Reglas, estado del dataset y estrategias
+- `GET /next-draw` - Fecha del próximo sorteo
+- `GET /history?limit=50` - Últimos sorteos
+- `GET /stats` - Estadísticas y probabilidades
+- `POST /generate` / `GET /generate` - Genera de 1 a 10 combinaciones
+- `GET|POST /refresh` - Actualiza el histórico (Lotoideas/SELAE)
+
+> La probabilidad del <em>jackpot</em> por apuesta es siempre <strong>1 entre 13.983.816</strong>.
+> El generador optimiza cobertura y evita combinaciones populares (menor reparto); no predice el azar.
 
 ## ⚠️ Descargo de Responsabilidad
 

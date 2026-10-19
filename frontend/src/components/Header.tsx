@@ -1,6 +1,6 @@
-import { Group, Anchor, Text, Burger, Drawer, Button } from '@mantine/core'
+import { Group, Anchor, Text, Burger, Drawer, Stack } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconHome, IconBrain, IconChartBar, IconHistory, IconTarget } from '@tabler/icons-react'
+import { IconHome, IconBrain, IconChartBar, IconHistory, IconTarget, IconClover } from '@tabler/icons-react'
 import { Link, useLocation } from 'react-router-dom'
 
 const navigation = [
@@ -9,6 +9,7 @@ const navigation = [
   { name: 'Estadísticas', href: '/statistics', icon: IconChartBar },
   { name: 'Historial', href: '/history', icon: IconHistory },
   { name: '7 Combinaciones', href: '/weekly-combinations', icon: IconTarget },
+  { name: 'Bonoloto', href: '/bonoloto', icon: IconClover },
 ]
 
 export default function Header() {
@@ -46,7 +47,7 @@ export default function Header() {
               🎱 LoTor
             </Text>
           </Anchor>
-          <Text size="sm" c="dimmed">Predicciones El Gordo de la Primitiva</Text>
+          <Text size="sm" c="dimmed">Predicciones El Gordo y Bonoloto</Text>
         </Group>
 
         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
@@ -57,9 +58,9 @@ export default function Header() {
       </Group>
 
       <Drawer opened={opened} onClose={close} size="sm" hiddenFrom="sm">
-        <Group direction="column" gap="md">
+        <Stack gap="md">
           {items}
-        </Group>
+        </Stack>
       </Drawer>
     </header>
   )

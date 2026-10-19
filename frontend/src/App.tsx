@@ -6,6 +6,7 @@ import PredictionPage from './components/PredictionPage'
 import StatisticsPage from './components/StatisticsPage'
 import HistoryPage from './components/HistoryPage'
 import WeeklyCombinationsPage from './components/WeeklyCombinationsPage'
+import BonolotoPage from './components/BonolotoPage'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="/statistics" element={<StatisticsPage />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/weekly-combinations" element={<WeeklyCombinationsPage />} />
+            <Route path="/bonoloto" element={<BonolotoPage />} />
           </Routes>
         </Container>
       </div>

@@ -168,4 +168,152 @@ export const combinationsApi = {
   },
 }
 
+// ---------------------------------------------------------------------------
+// Bonoloto
+// ---------------------------------------------------------------------------
+export type BonolotoStrategy = 'big_prize' | 'balanced' | 'coverage' | 'statistical'
+
+export interface BonolotoCombination {
+  index: number
+  numbers: number[]
+  reintegro: number
+  quality: number
+  quality_grade: string
+  total_score: number
+  popularity: number
+  sum: number
+  odd: number
+  even: number
+  low: number
+  high: number
+  consecutive_pairs: number
+  decades: number[]
+  tags: string[]
+  theoretical: Record<string, number>
+}
+
+export interface BonolotoDatasetInfo {
+  total_draws: number
+  date_range: { from: string; to: string }
+  last_draw: {
+    date: string
+    numbers: number[]
+    complementario?: number | null
+    reintegro?: number | null
+  }
+  source: string
+  next_draw: string
+}
+
+export interface BonolotoPortfolio {
+  tickets: number
+  cost_eur: number
+  coverage: {
+    unique_numbers: number
+    numbers_pct: number
+    total_numbers: number
+    unique_pairs: number
+    pairs_pct: number
+    unique_triples: number
+    triples_pct: number
+  }
+  overlap: { average: number; max: number }
+  appearance: { max: number; min: number; distribution: Record<string, number> }
+  popularity: {
+    average_penalty: number
+    low_popularity_tickets: number
+    risk: string
+    explanation: string
+  }
+  theoretical: {
+    jackpot_probability: number
+    jackpot_one_in: number
+    prob_6: number
+    prob_5_plus: number
+    prob_5_plus_complementario: number
+    prob_5: number
+    prob_4_plus: number
+    prob_3_plus: number
+    prob_any_main_prize: number
+    prob_reintegro: number
+    prob_any_prize: number
+    expected_matches: number
+    expected_tickets_by_tier: Record<string, number>
+    single_ticket: Record<string, number>
+  }
+  simulation: {
+    simulations: number
+    seed: number
+    best_match_distribution: Record<string, number>
+    prob_3_plus: number
+    prob_4_plus: number
+    prob_5_plus: number
+  }
+  reintegros: {
+    digits: number[]
+    distinct: number
+    coverage_pct: number
+    guaranteed_match: boolean
+  }
+}
+
+export interface BonolotoGenerateResponse {
+  game: {
+    name: string
+    numbers_per_ticket: number
+    max_number: number
+    reintegro_range: number[]
+    draw_days: string
+    ticket_price_eur: number
+    prize_categories: Record<string, string>
+  }
+  generated_at: string
+  seed: number
+  strategy: BonolotoStrategy
+  strategy_label: string
+  strategy_description: string
+  count: number
+  dataset: BonolotoDatasetInfo
+  combinations: BonolotoCombination[]
+  portfolio: BonolotoPortfolio
+  analysis: any
+  model: any
+  recommendations: string[]
+  disclaimer: string
+}
+
+export interface BonolotoMetaResponse {
+  game: BonolotoGenerateResponse['game']
+  dataset: any
+  strategies: Record<string, { label: string; description: string }>
+  next_draw: string
+}
+
+export const bonolotoApi = {
+  meta: async () => {
+    const response = await api.get<BonolotoMetaResponse>('/bonoloto/meta')
+    return response.data
+  },
+  stats: async () => {
+    const response = await api.get('/bonoloto/stats')
+    return response.data
+  },
+  history: async (limit = 30) => {
+    const response = await api.get(`/bonoloto/history?limit=${limit}`)
+    return response.data
+  },
+  generate: async (count: number, strategy: BonolotoStrategy, seed?: number) => {
+    const response = await api.post<BonolotoGenerateResponse>('/bonoloto/generate', {
+      count,
+      strategy,
+      seed,
+    })
+    return response.data
+  },
+  refresh: async () => {
+    const response = await api.get('/bonoloto/refresh')
+    return response.data
+  },
+}
+
 export default api

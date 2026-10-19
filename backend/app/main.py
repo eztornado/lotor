@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from app.core.config import settings
-from app.api import predictions, history, stats, multi_combinations
+from app.api import predictions, history, stats, multi_combinations, bonoloto
 
 # Configurar logger
 logger.remove()
@@ -33,14 +33,16 @@ app.include_router(predictions.router, prefix=f"{settings.API_V1_STR}/prediction
 app.include_router(history.router, prefix=f"{settings.API_V1_STR}/history", tags=["history"])
 app.include_router(stats.router, prefix=f"{settings.API_V1_STR}/stats", tags=["stats"])
 app.include_router(multi_combinations.router, prefix=f"{settings.API_V1_STR}/combinations", tags=["combinations"])
+app.include_router(bonoloto.router, prefix=f"{settings.API_V1_STR}/bonoloto", tags=["bonoloto"])
 
 
 @app.get("/")
 async def root():
     """Endpoint raíz"""
     return {
-        "message": "LoTor API - Sistema de Predicción El Gordo de la Primitiva",
+        "message": "LoTor API - Predicciones y generación de loterías",
         "version": settings.VERSION,
+        "games": ["El Gordo de la Primitiva", "Bonoloto"],
         "docs": "/docs",
     }
 
