@@ -1,13 +1,19 @@
+import os
+import sys
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from loguru import logger
+
 from app.core.config import settings
 from app.api import predictions, history, stats, multi_combinations, bonoloto
 
-# Configurar logger
+# Configurar logger (sink explícito a stdout para evitar recursión/bloqueos)
 logger.remove()
 logger.add(
-    logger.info,
+    sys.stdout,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
     level="INFO",
 )
@@ -15,7 +21,7 @@ logger.add(
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="API de predicción para El Gordo de la Primitiva",
+    description="API de predicción para El Gordo de la Primitiva y generación de Bonoloto",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
@@ -28,6 +34,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Montar assets del frontend si están presentes (build de producción)
+FRONTEND_DIR = "./frontend"
+if os.path.isdir(os.path.join(FRONTEND_DIR, "assets")):
+    app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIR, "assets")), name="assets")
+
 # Incluir routers
 app.include_router(predictions.router, prefix=f"{settings.API_V1_STR}/predictions", tags=["predictions"])
 app.include_router(history.router, prefix=f"{settings.API_V1_STR}/history", tags=["history"])
@@ -38,7 +49,10 @@ app.include_router(bonoloto.router, prefix=f"{settings.API_V1_STR}/bonoloto", ta
 
 @app.get("/")
 async def root():
-    """Endpoint raíz"""
+    """Endpoint raíz: sirve el frontend si está construido; si no, info de la API."""
+    frontend_path = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path, media_type="text/html")
     return {
         "message": "LoTor API - Predicciones y generación de loterías",
         "version": settings.VERSION,
@@ -51,6 +65,31 @@ async def root():
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "LoTor API"}
+
+
+# Catch-all para SPA routing (debe ir al final)
+@app.get("/{full_path:path}")
+async def serve_frontend(full_path: str):
+    """Sirve el frontend para todas las rutas que no sean de la API."""
+    if full_path.startswith("api/") or full_path in {"api", "health"}:
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
+
+    static_path = os.path.join(FRONTEND_DIR, full_path)
+    if os.path.isfile(static_path):
+        return FileResponse(static_path)
+
+    frontend_path = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path, media_type="text/html")
+
+    return JSONResponse(
+        status_code=404,
+        content={
+            "message": "LoTor API - Predicciones y generación de loterías",
+            "version": settings.VERSION,
+            "docs": "/docs",
+        },
+    )
 
 
 if __name__ == "__main__":

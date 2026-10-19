@@ -1,4 +1,11 @@
-import torch
+# Importación condicional de PyTorch (no es necesaria para este generador)
+try:
+    import torch  # noqa: F401
+    HAS_TORCH = True
+except ImportError:
+    torch = None
+    HAS_TORCH = False
+
 import numpy as np
 from typing import List, Dict, Tuple, Optional
 from loguru import logger

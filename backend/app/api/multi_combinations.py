@@ -8,8 +8,14 @@ from pydantic import BaseModel
 from app.ml.multi_combination import Combination, MultiCombinationGenerator, create_multi_combination_generator
 from app.services.data_sources import create_data_manager
 from app.services.validator import create_validator
-from app.ml.models import create_models, StatisticalPredictor
 from app.core.config import settings
+from app.core.model_loader import get_predictor
+
+# Importación dinámica según disponibilidad de PyTorch
+try:
+    from app.ml.models import StatisticalPredictor
+except ImportError:
+    from app.ml.lightweight_models import StatisticalPredictor
 
 router = APIRouter()
 
@@ -26,7 +32,9 @@ def get_models():
 
     if ensemble_model is None:
         logger.info("Loading ML models...")
-        ensemble_model = create_models(device='cpu')
+        # Usar el predictor dinámico (PyTorch, ligero o estadístico)
+        predictor = get_predictor()
+        ensemble_model = getattr(predictor, 'ensemble_model', predictor)
 
     if statistical_model is None:
         statistical_model = StatisticalPredictor()

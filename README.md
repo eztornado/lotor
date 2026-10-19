@@ -80,6 +80,31 @@ npm install
 npm run dev
 ```
 
+## 🐳 Despliegue (Docker / Coolify)
+
+El repositorio incluye un **`Dockerfile` en la raíz** pensado para Coolify y para
+cualquier build de un solo contenedor:
+
+1. **Etapa frontend**: `node:20-alpine` ejecuta `npm ci` + `npm run build`.
+2. **Etapa backend**: `python:3.12-slim` instala
+   [`backend/requirements-no-torch.txt`](backend/requirements-no-torch.txt)
+   (sin PyTorch; usa modelos ligeros/estadísticos).
+3. Copia el `dist` del frontend y FastAPI lo sirve en `http://localhost:8000`
+   (`/` y rutas SPA), con la API bajo `/api/v1`.
+
+```bash
+# Build manual
+docker build -t lotor .
+docker run -p 8000:8000 lotor
+```
+
+En **Coolify**: Build Pack = `Dockerfile`, Base Directory = `/`, Dockerfile
+Location = `/Dockerfile`, puerto expuesto `8000`.
+
+> La app funciona sin PyTorch: `torch` solo se usa si está instalado; si no, el
+> `ModelLoader` cae automáticamente en `lightweight_models` (scikit-learn) o en
+> el modelo estadístico.
+
 ## 📊 Fuentes de Datos
 
 **SELAE no tiene API oficial**, pero he implementado un sistema robusto con múltiples fuentes:

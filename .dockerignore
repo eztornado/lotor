@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# Frontend: sólo se necesita el código fuente y los manifests para la etapa de build
+frontend/node_modules
+frontend/dist
+frontend/.vite
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Entornos y secretos
+.env
+.env.*
+!.env.example
+
+# Documentación y artefactos
+docs/
+*.md
+logs/
+*.log
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

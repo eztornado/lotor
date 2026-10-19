@@ -10,11 +10,15 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements primero para caché
-COPY requirements.txt .
+COPY requirements-no-torch.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código de la aplicación
 COPY . .
+
+# Forzar modelos ligeros (la imagen no incluye PyTorch)
+ENV FORCE_LIGHTWEIGHT_MODELS=true
+ENV ML_MODEL_TYPE=lightweight
 
 # Crear directorios necesarios
 RUN mkdir -p data/raw data/processed app/ml/models

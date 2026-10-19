@@ -5,9 +5,14 @@ from loguru import logger
 
 from app.models.schemas import PredictionResult, HealthCheck
 from app.services.data_sources import create_data_manager
-from app.ml.models import create_models, StatisticalPredictor
 from app.core.model_loader import get_predictor, get_model_info
 from app.core.config import settings
+
+# Importación dinámica según disponibilidad de PyTorch
+try:
+    from app.ml.models import StatisticalPredictor
+except ImportError:
+    from app.ml.lightweight_models import StatisticalPredictor
 
 router = APIRouter()
 
