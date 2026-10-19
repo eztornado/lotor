@@ -251,13 +251,25 @@ de la 1ª categoría.
 
 ## 🖥️ Frontend
 
-- Ruta: `/bonoloto` (`frontend/src/components/BonolotoPage.tsx`).
-- Permite elegir **número de apuestas** (1–10) y **estrategia**, generar una
-  cartera nueva (semilla aleatoria) y **copiar** las combinaciones.
+Bonoloto es un "juego" de primera clase dentro de LoTor, al mismo nivel que El
+Gordo. El frontend es multi-juego: un selector en la cabecera cambia entre ambos
+y cada juego tiene su propia navegación.
+
+| Ruta | Página |
+| --- | --- |
+| `/bonoloto` | Generador de carteras (`pages/bonoloto/BonolotoPage.tsx`) |
+| `/bonoloto/estadisticas` | Estadísticas del histórico (`BonolotoStatsPage.tsx`) |
+| `/bonoloto/historial` | Últimos sorteos (`BonolotoHistoryPage.tsx`) |
+
+- El generador permite elegir **número de apuestas** (1–10) y **estrategia**,
+  generar una cartera nueva (semilla aleatoria) y **copiar** las combinaciones.
 - Muestra: próximo sorteo, coste, cobertura (números / pares / tríos), riesgo de
   compartir premio, probabilidades teóricas, simulación, análisis del histórico
-  (calientes, retrasados, estructura, pares) y recomendaciones.
-- Cliente API: `frontend/src/services/api.ts` → `bonolotoApi`.
+  (calientes, retrasados, estructura, pares, reintegros) y recomendaciones.
+- Los componentes de UI están en `components/bonoloto/` y el cliente API en
+  `services/bonoloto.ts`.
+- Consulta [`docs/FRONTEND.md`](FRONTEND.md) para la arquitectura completa del
+  frontend.
 
 ---
 

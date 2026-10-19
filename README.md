@@ -50,13 +50,17 @@ LoTor/
 │       └── processed/    # Datos procesados para ML
 ├── frontend/
 │   ├── src/
-│   │   ├── components/   # Componentes React
-│   │   ├── services/     # Cliente API
-│   │   ├── hooks/        # Custom hooks
-│   │   └── types/        # TypeScript types
+│   │   ├── components/   # Componentes UI (layout + por juego)
+│   │   ├── pages/        # Páginas (home, gordo/, bonoloto/)
+│   │   ├── services/     # Cliente API (client, gordo, bonoloto)
+│   │   ├── games.ts      # Registro multi-juego (navegación/colores)
+│   │   └── App.tsx       # Router y layout
 │   └── public/
 └── docs/
 ```
+
+La app es **multi-juego** (El Gordo y Bonoloto) con un selector en la cabecera.
+Ver [documentación del frontend](docs/FRONTEND.md).
 
 ## 🚀 Instalación
 

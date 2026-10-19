@@ -3,7 +3,7 @@ import {
   Title, Stack, Paper, Grid, Card, Group, Button, Badge, Alert, Text, Box, Progress, NumberInput
 } from '@mantine/core'
 import { IconRefresh, IconInfoCircle, IconAlertTriangle, IconBulb, IconTrophy, IconShield, IconScale } from '@tabler/icons-react'
-import { combinationsApi, WeeklyCombinationsResponse, Combination } from '../services/api'
+import { combinationsApi, WeeklyCombinationsResponse, Combination } from '../../services/api'
 
 export default function WeeklyCombinationsPage() {
   const [data, setData] = useState<WeeklyCombinationsResponse | null>(null)

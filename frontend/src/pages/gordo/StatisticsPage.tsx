@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Title, Stack, Paper, Grid, Card, Group, Text, Loader, Badge, Progress, Box } from '@mantine/core'
-import { statsApi, NumberStats, KeyNumberStats } from '../services/api'
+import { statsApi, NumberStats, KeyNumberStats } from '../../services/api'
 
 export default function StatisticsPage() {
   const [stats, setStats] = useState<any>(null)

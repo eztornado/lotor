@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Title, Stack, Paper, Card, Text, Loader, Badge, Group, Button, Alert } from '@mantine/core'
 import { IconRefresh, IconInfoCircle } from '@tabler/icons-react'
-import { historyApi, DrawResult } from '../services/api'
+import { historyApi, DrawResult } from '../../services/api'
 
 export default function HistoryPage() {
   const [draws, setDraws] = useState<DrawResult[]>([])

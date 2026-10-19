@@ -4,7 +4,7 @@ import {
   Alert, Text, Loader, NumberInput, Box
 } from '@mantine/core'
 import { IconRefresh, IconInfoCircle, IconAlertTriangle } from '@tabler/icons-react'
-import { predictionsApi } from '../services/api'
+import { predictionsApi } from '../../services/api'
 
 interface Prediction {
   prediction_date: string
