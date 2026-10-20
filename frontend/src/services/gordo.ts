@@ -164,3 +164,263 @@ export const combinationsApi = {
     return response.data
   },
 }
+
+// ---------------------------------------------------------------------------
+// Generador estadístico de El Gordo (5 números + clave)
+// ---------------------------------------------------------------------------
+export type GordoStrategy = 'big_prize' | 'balanced' | 'coverage' | 'statistical'
+
+export interface GordoCombination {
+  index: number
+  numbers: number[]
+  key_number: number
+  quality: number
+  total_score: number
+  popularity: number
+  sum: number
+  odd: number
+  even: number
+  low: number
+  high: number
+  consecutive_pairs: number
+  decades: number[]
+  tags: string[]
+  theoretical: Record<string, number>
+  quality_grade: string
+}
+
+export interface GordoDatasetInfo {
+  total_draws: number
+  date_range: { from: string; to: string }
+  last_draw: {
+    date: string
+    numbers: number[]
+    key_number?: number | null
+  }
+  source: string
+  next_draw: string
+}
+
+export interface GordoPortfolio {
+  tickets: number
+  cost_eur: number
+  coverage: {
+    unique_numbers: number
+    numbers_pct: number
+    possible_numbers: number
+    numbers_possible_pct: number
+    total_numbers: number
+    unique_pairs: number
+    pairs_pct: number
+    pairs_total: number
+    pairs_total_pct: number
+    unique_triples: number
+    triples_pct: number
+    triples_total: number
+    triples_total_pct: number
+  }
+  overlap: { average: number; max: number }
+  appearance: {
+    max: number
+    min: number
+    distribution: Record<string, number>
+  }
+  popularity: {
+    average_penalty: number
+    low_popularity_tickets: number
+    risk: string
+    explanation: string
+  }
+  theoretical: {
+    jackpot_probability: number
+    jackpot_one_in: number
+    prob_1: number
+    prob_2: number
+    prob_3: number
+    prob_4: number
+    prob_5: number
+    prob_6: number
+    prob_7: number
+    prob_8: number
+    prob_5_plus: number
+    prob_4_plus: number
+    prob_3_plus: number
+    prob_7_plus: number
+    prob_2_plus: number
+    prob_any_prize: number
+    prob_any_prize_one_in: number | null
+    prob_reintegro: number
+    prob_any_return: number
+    prob_any_return_one_in: number | null
+    reintegro_eur: number
+    expected_reintegro_eur: number
+    prob_key_match: number
+    expected_matches: number
+    expected_tickets_by_tier: Record<string, number>
+    single_ticket: Record<string, number>
+    exact: boolean
+  }
+  simulation: {
+    simulations: number
+    seed: number
+    best_match_distribution: Record<string, number>
+    category_distribution: Record<string, number>
+    prob_any_prize: number
+    prob_2_plus: number
+    prob_3_plus: number
+    prob_4_plus: number
+    prob_5_plus: number
+    prob_reintegro: number
+    prob_key_match: number
+    prob_any_return: number
+  }
+  keys: {
+    digits: number[]
+    distinct: number
+    coverage_pct: number
+    guaranteed_match: boolean
+  }
+}
+
+export interface GordoNumberProfile {
+  number: number
+  frequency: number
+  recent_frequency: number
+  last_seen?: string | null
+  gap_draws: number
+  gap_days: number | null
+  long_lift: number
+  recent_lift: number
+  weight: number
+}
+
+export interface GordoPair {
+  numbers: number[]
+  frequency: number
+  lift: number
+}
+
+export interface GordoKeyProfile {
+  digit: number
+  frequency: number
+  probability: number
+  last_seen?: string | null
+  gap_draws: number
+}
+
+export interface GordoStructure {
+  draws_used: number
+  average_sum: number
+  sum_deviation: number
+  average_spread: number
+  odd_distribution: Record<string, number>
+  low_distribution: Record<string, number>
+  consecutive_distribution: Record<string, number>
+  most_common_decade_pattern: {
+    pattern: number[]
+    labels: string[]
+    count: number
+  }
+}
+
+export interface GordoAnalysis {
+  hot_numbers: GordoNumberProfile[]
+  cold_numbers: GordoNumberProfile[]
+  most_frequent_numbers: GordoNumberProfile[]
+  overdue_numbers: GordoNumberProfile[]
+  top_pairs: GordoPair[]
+  key: GordoKeyProfile[]
+  structure: GordoStructure
+}
+
+export interface GordoGenerateResponse {
+  game: {
+    name: string
+    numbers_per_ticket: number
+    max_number: number
+    key_range: number[]
+    draw_days: string
+    ticket_price_eur: number
+    prize_categories: Record<string, string>
+  }
+  generated_at: string
+  seed: number
+  strategy: GordoStrategy
+  strategy_label: string
+  strategy_description: string
+  count: number
+  dataset: GordoDatasetInfo
+  combinations: GordoCombination[]
+  portfolio: GordoPortfolio
+  analysis: GordoAnalysis
+  model: {
+    type?: string
+    version?: string
+    candidate_count?: number
+    pool_size?: number
+    strategies?: Record<string, { label: string; description: string }>
+  }
+  recommendations: string[]
+  disclaimer: string
+}
+
+export interface GordoMetaResponse {
+  game: GordoGenerateResponse['game']
+  dataset: GordoDatasetInfo
+  strategies: Record<string, { label: string; description: string }>
+  next_draw: string
+}
+
+export interface GordoStatsResponse {
+  dataset: GordoDatasetInfo
+  analysis: GordoAnalysis
+  model: {
+    type: string
+    version: string
+    total_combinations: number
+    number_combinations: number
+    ticket_odds: Record<string, number>
+    prize_counts: Record<string, number>
+    reintegro_plays: number
+    ticket_price_eur: number
+    strategies: Record<string, { label: string; description: string }>
+  }
+}
+
+export interface GordoHistoryDraw {
+  date: string
+  numbers: number[]
+  key_number?: number | null
+  source?: string
+}
+
+export const gordoApi = {
+  meta: async () => {
+    const response = await api.get<GordoMetaResponse>('/gordo/meta')
+    return response.data
+  },
+  stats: async () => {
+    const response = await api.get<GordoStatsResponse>('/gordo/stats')
+    return response.data
+  },
+  history: async (limit = 30) => {
+    const response = await api.get<GordoHistoryDraw[]>(`/gordo/history?limit=${limit}`)
+    return response.data
+  },
+  generate: async (count: number, strategy: GordoStrategy, seed?: number) => {
+    const response = await api.post<GordoGenerateResponse>('/gordo/generate', {
+      count,
+      strategy,
+      seed,
+    })
+    return response.data
+  },
+  refresh: async () => {
+    const response = await api.get('/gordo/refresh')
+    return response.data
+  },
+  nextDraw: async () => {
+    const response = await api.get('/gordo/next-draw')
+    return response.data
+  },
+}

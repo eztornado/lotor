@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from app.core.config import settings
-from app.api import predictions, history, stats, multi_combinations, bonoloto
+from app.api import predictions, history, stats, multi_combinations, bonoloto, gordo
 
 # Configurar logger (sink explícito a stdout para evitar recursión/bloqueos)
 logger.remove()
@@ -34,8 +34,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Montar assets del frontend si están presentes (build de producción)
-FRONTEND_DIR = "./frontend"
+# Montar assets del frontend si están presentes (build de producción).
+# En Docker el build se copia a ./frontend; en local puede estar en
+# ./frontend/dist (raíz del repo) o ../frontend/dist (ejecutando desde backend).
+def _find_frontend_dir() -> str:
+    for candidate in (
+        "./frontend/dist",
+        "../frontend/dist",
+        "./frontend",
+        "../frontend",
+        "./dist",
+    ):
+        if os.path.isfile(os.path.join(candidate, "index.html")):
+            return os.path.abspath(candidate)
+    return os.path.abspath("./frontend")
+
+
+FRONTEND_DIR = _find_frontend_dir()
 if os.path.isdir(os.path.join(FRONTEND_DIR, "assets")):
     app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIR, "assets")), name="assets")
 
@@ -45,6 +60,7 @@ app.include_router(history.router, prefix=f"{settings.API_V1_STR}/history", tags
 app.include_router(stats.router, prefix=f"{settings.API_V1_STR}/stats", tags=["stats"])
 app.include_router(multi_combinations.router, prefix=f"{settings.API_V1_STR}/combinations", tags=["combinations"])
 app.include_router(bonoloto.router, prefix=f"{settings.API_V1_STR}/bonoloto", tags=["bonoloto"])
+app.include_router(gordo.router, prefix=f"{settings.API_V1_STR}/gordo", tags=["gordo"])
 
 
 @app.get("/")
@@ -74,7 +90,9 @@ async def serve_frontend(full_path: str):
     if full_path.startswith("api/") or full_path in {"api", "health"}:
         return JSONResponse(status_code=404, content={"detail": "Not Found"})
 
-    static_path = os.path.join(FRONTEND_DIR, full_path)
+    static_path = os.path.abspath(os.path.join(FRONTEND_DIR, full_path))
+    if not static_path.startswith(FRONTEND_DIR + os.sep):
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
     if os.path.isfile(static_path):
         return FileResponse(static_path)
 

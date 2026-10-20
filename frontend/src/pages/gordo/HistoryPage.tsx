@@ -1,48 +1,109 @@
-import { useState, useEffect } from 'react'
-import { Title, Stack, Paper, Card, Text, Loader, Badge, Group, Button, Alert } from '@mantine/core'
-import { IconRefresh, IconInfoCircle } from '@tabler/icons-react'
-import { historyApi, DrawResult } from '../../services/api'
+import { useEffect, useState } from 'react'
+import {
+  Alert,
+  Badge,
+  Button,
+  Group,
+  Loader,
+  NumberInput,
+  Paper,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core'
+import { IconInfoCircle, IconRefresh } from '@tabler/icons-react'
+import { gordoApi, type GordoHistoryDraw } from '../../services/gordo'
+import { Ball } from '../../components/gordo/Ball'
+import { formatKey, formatShortDate } from '../../components/gordo/format'
 
 export default function HistoryPage() {
-  const [draws, setDraws] = useState<DrawResult[]>([])
+  const [draws, setDraws] = useState<GordoHistoryDraw[]>([])
+  const [limit, setLimit] = useState(30)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
-  const fetchDraws = async (forceRefresh = false) => {
-    if (forceRefresh) setRefreshing(true)
+  const fetchDraws = async () => {
+    setLoading(true)
     try {
-      const data = await historyApi.getRecent(52)
-      setDraws(data)
+      const payload = await gordoApi.history(limit)
+      setDraws(payload)
       setError(null)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error al obtener historial')
+      setError(err.response?.data?.detail || 'No se ha podido cargar el historial')
     } finally {
       setLoading(false)
-      setRefreshing(false)
     }
   }
 
   useEffect(() => {
-    fetchDraws()
-  }, [])
+    let active = true
+    setLoading(true)
+    gordoApi
+      .history(limit)
+      .then((payload) => {
+        if (active) setDraws(payload)
+      })
+      .catch((err: any) => {
+        if (active) setError(err.response?.data?.detail || 'No se ha podido cargar el historial')
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [limit])
 
-  const formatNumber = (num: number) => num.toString().padStart(2, '0')
-
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}><Loader size="xl" /></div>
+  const refresh = async () => {
+    setRefreshing(true)
+    setNotice(null)
+    try {
+      const result = await gordoApi.refresh()
+      setNotice(`Histórico actualizado: ${result.total_draws.toLocaleString('es-ES')} sorteos.`)
+      await fetchDraws()
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'No se ha podido actualizar el histórico')
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   return (
-    <Stack gap="xl">
-      <Group justify="space-between">
-        <Title order={2}>📜 Historial de Sorteos</Title>
-        <Button
-          leftSection={<IconRefresh size={16} />}
-          onClick={() => fetchDraws(true)}
-          loading={refreshing}
-          disabled={refreshing}
-        >
-          Actualizar
-        </Button>
+    <Stack gap="lg">
+      <Group justify="space-between" align="flex-end" wrap="wrap">
+        <Stack gap={2}>
+          <Group gap="xs">
+            <Title order={1}>🎯 Historial El Gordo</Title>
+            <Badge color="blue" variant="light">
+              Desde 2005
+            </Badge>
+          </Group>
+          <Text c="dimmed">Últimos sorteos, del más reciente al más antiguo.</Text>
+        </Stack>
+        <Group align="flex-end">
+          <NumberInput
+            label="Sorteos a mostrar"
+            value={limit}
+            onChange={(value) =>
+              setLimit(typeof value === 'number' ? Math.min(500, Math.max(1, value)) : 30)
+            }
+            min={1}
+            max={500}
+            step={10}
+            style={{ width: 160 }}
+          />
+          <Button
+            leftSection={<IconRefresh size={16} />}
+            variant="light"
+            onClick={refresh}
+            loading={refreshing}
+            disabled={refreshing}
+          >
+            Actualizar
+          </Button>
+        </Group>
       </Group>
 
       {error && (
@@ -51,54 +112,47 @@ export default function HistoryPage() {
         </Alert>
       )}
 
-      <Paper shadow="sm" p="md" withBorder>
-        <Text size="sm">
-          Mostrando los últimos <Badge>{draws.length}</Badge> sorteos
-        </Text>
-      </Paper>
+      {notice && (
+        <Alert color="teal" variant="light">
+          {notice}
+        </Alert>
+      )}
 
-      <Stack gap="sm">
-        {draws.map((draw, idx) => (
-          <Card key={idx} shadow="xs" padding="md" withBorder>
-            <Group justify="space-between" align="flex-start">
-              <Stack gap={4}>
-                <Text fw={700}>
-                  {new Date(draw.date).toLocaleDateString('es-ES', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </Text>
-                <Group gap={4}>
-                  {draw.numbers.map((num, numIdx) => (
-                    <Badge
-                      key={numIdx}
-                      size="lg"
-                      style={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white'
-                      }}
-                    >
-                      {formatNumber(num)}
+      {loading ? (
+        <Group justify="center" py="xl">
+          <Loader />
+        </Group>
+      ) : (
+        <Stack gap="sm">
+          {draws.map((draw) => (
+            <Paper key={draw.date} shadow="xs" p="md" withBorder>
+              <Stack gap="xs">
+                <Group justify="space-between">
+                  <Text fw={700}>{formatShortDate(draw.date)}</Text>
+                  <Group gap={6}>
+                    <Badge variant="light" color="yellow">
+                      Clave: {draw.key_number != null ? formatKey(draw.key_number) : '—'}
                     </Badge>
+                    {draw.source && (
+                      <Badge variant="outline" color="gray">
+                        {draw.source}
+                      </Badge>
+                    )}
+                  </Group>
+                </Group>
+                <Group gap={6}>
+                  {draw.numbers.map((number) => (
+                    <Ball key={number} number={number} />
                   ))}
-                  <Badge
-                    size="lg"
-                    color="pink"
-                    variant="filled"
-                  >
-                    K: {draw.key_number}
-                  </Badge>
+                  {draw.key_number != null && (
+                    <Ball number={draw.key_number} variant="key" />
+                  )}
                 </Group>
               </Stack>
-              <Badge color="gray" variant="light">
-                Sorteo #{draws.length - idx}
-              </Badge>
-            </Group>
-          </Card>
-        ))}
-      </Stack>
+            </Paper>
+          ))}
+        </Stack>
+      )}
     </Stack>
   )
 }

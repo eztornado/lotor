@@ -1,6 +1,8 @@
 # LoTor - Sistema de Predicción El Gordo de la Primitiva y Bonoloto
 
-Sistema de predicción basado en Inteligencia Artificial para El Gordo de la Primitiva y generador inteligente de carteras para Bonoloto (España).
+Sistema de predicción basado en Inteligencia Artificial para El Gordo de la
+Primitiva y generadores inteligentes de carteras para El Gordo y Bonoloto
+(España).
 
 Proyecto de ejemplo en producción: https://lotor.tornadocore.es/
 
@@ -10,7 +12,13 @@ Proyecto de ejemplo en producción: https://lotor.tornadocore.es/
 
 - **5 números** del 1 al 54
 - **1 número clave** del 0 al 9
-- Sorteo todos los domingos
+- **8 categorías de premio** (de 5 + clave a 2 aciertos) + **reintegro** de
+  1,50 € si coincide la clave, compatible con cualquier categoría
+- Sorteo todos los domingos · apuesta de **1,50 €**
+- Generador de carteras de **1 a 10 apuestas** con histórico desde 2005,
+  probabilidades exactas, cobertura de claves y análisis anti-popularidad
+
+[Ver documentación completa de El Gordo](docs/GORDO.md)
 
 ### Bonoloto
 
@@ -107,14 +115,22 @@ Location = `/Dockerfile`, puerto expuesto `8000`.
 
 ## 📊 Fuentes de Datos
 
-**SELAE no tiene API oficial**, pero he implementado un sistema robusto con múltiples fuentes:
+**SELAE no tiene una API histórica oficial**, así que los generadores usan
+datasets CSV completos y un importador reproducible desde las hojas públicas de
+Lotoideas (resultados oficiales de SELAE):
 
-1. **RSS Feed Oficial** - Canal RSS oficial de SELAE
-2. **LoteriaAPI** - API gratuita de terceros
-3. **Downtack API** - API con múltiples formatos
-4. **Dataset CSV** - Offline-first con datos iniciales
+- **El Gordo**: `backend/data/raw/gordo_historical.csv`, 1.123 sorteos desde el
+  06/02/2005 (formato 5 números + clave).
+- **Bonoloto**: `backend/data/raw/bonoloto_historical.csv`, 9.420 sorteos desde
+  el 28/02/1988.
+- Scripts: `backend/scripts/import_gordo.py` e
+  `backend/scripts/import_bonoloto.py` (con modo `--offline`).
+- API de actualización: `GET|POST /api/v1/gordo/refresh` y
+  `/api/v1/bonoloto/refresh`.
 
-El sistema usa **estrategia de fallback** automática: si una fuente falla, intenta la siguiente automáticamente.
+Los datasets se cachean en memoria y son la fuente de verdad de los
+generadores. Los endpoints legacy de predicción conservan sus fuentes con
+fallback.
 
 [Ver documentación completa de fuentes de datos](docs/DATASETS.md)
 
@@ -137,12 +153,24 @@ El sistema usa **estrategia de fallback** automática: si una fuente falla, inte
 
 ## 📡 API Endpoints
 
-### El Gordo de la Primitiva
+### El Gordo de la Primitiva (`/api/v1/gordo`)
 
-- `GET /api/history` - Obtener historial de sorteos
-- `POST /api/predict` - Obtener predicción para la próxima semana
-- `GET /api/stats` - Estadísticas de números
-- `GET /api/models` - Información sobre modelos
+- `GET /meta` - Reglas, estado del dataset y estrategias
+- `GET /next-draw` - Fecha del próximo sorteo
+- `GET /history?limit=50` - Últimos sorteos
+- `GET /stats` - Estadísticas, claves y probabilidades
+- `POST /generate` / `GET /generate` - Genera de 1 a 10 combinaciones con
+  estrategia `big_prize`, `balanced`, `coverage` o `statistical`
+- `GET|POST /refresh` - Actualiza el histórico (Lotoideas/SELAE)
+
+> El primer premio (5 + clave) es siempre **1 entre 31.625.100** por apuesta.
+> Con 10 apuestas disjuntas y las 10 claves cubiertas, la probabilidad de alguna
+> de las 8 categorías es **55,5084 %** y el reintegro de 1,50 € está garantizado
+> en una de las apuestas. El generador optimiza cobertura y evita combinaciones
+> populares; no predice el azar.
+
+Los endpoints legacy de predicción IA (`/api/v1/predictions`, `/api/v1/history`,
+`/api/v1/stats`) siguen disponibles para la página de predicción.
 
 ### Bonoloto (`/api/v1/bonoloto`)
 

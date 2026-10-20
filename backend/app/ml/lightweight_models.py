@@ -12,9 +12,9 @@ import random
 try:
     import xgboost as xgb
     XGBOOST_AVAILABLE = True
-except ImportError:
+except Exception as exc:  # ImportError o fallo de la librería nativa (libomp, etc.)
     XGBOOST_AVAILABLE = False
-    logger.warning("XGBoost not available, using fallback")
+    logger.warning(f"XGBoost not available, using fallback: {exc}")
 
 try:
     from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier

@@ -16,6 +16,18 @@ frontend/
     ├── components/
     │   ├── layout/
     │   │   └── Header.tsx        # Cabecera + selector de juego + nav
+    │   ├── shared/
+    │   │   └── format.ts         # Formato común (números, %, euros, fechas)
+    │   ├── gordo/                # Componentes de UI de El Gordo
+    │   │   ├── Ball.tsx
+    │   │   ├── CombinationCard.tsx
+    │   │   ├── PortfolioOverview.tsx
+    │   │   ├── ProbabilityPanel.tsx
+    │   │   ├── SharingRiskPanel.tsx
+    │   │   ├── AnalysisPanel.tsx
+    │   │   ├── RecommendationsPanel.tsx
+    │   │   ├── HowItWorks.tsx
+    │   │   └── format.ts         # Reexporta shared/format
     │   └── bonoloto/             # Componentes de UI de Bonoloto
     │       ├── Ball.tsx
     │       ├── CombinationCard.tsx
@@ -25,11 +37,12 @@ frontend/
     │       ├── AnalysisPanel.tsx
     │       ├── RecommendationsPanel.tsx
     │       ├── HowItWorks.tsx
-    │       └── format.ts
+    │       └── format.ts         # Reexporta shared/format
     ├── pages/
     │   ├── HomePage.tsx          # Home multi‑juego (tarjeta por juego)
     │   ├── gordo/                # Páginas de El Gordo
-    │   │   ├── PredictionPage.tsx
+    │   │   ├── GordoGeneratorPage.tsx  # Generador de carteras
+    │   │   ├── PredictionPage.tsx      # Predicción IA legacy
     │   │   ├── StatisticsPage.tsx
     │   │   ├── HistoryPage.tsx
     │   │   └── WeeklyCombinationsPage.tsx
@@ -49,10 +62,11 @@ frontend/
 | Ruta | Página |
 | --- | --- |
 | `/` | Home multi‑juego |
-| `/gordo/prediction` | Predicción El Gordo |
+| `/gordo` | Generador de carteras El Gordo (principal) |
 | `/gordo/statistics` | Estadísticas El Gordo |
 | `/gordo/history` | Historial El Gordo |
-| `/gordo/weekly-combinations` | 7 combinaciones semanales |
+| `/gordo/prediction` | Predicción IA legacy (enlaza al generador) |
+| `/gordo/weekly-combinations` | 7 combinaciones semanales legacy |
 | `/bonoloto` | Generador Bonoloto |
 | `/bonoloto/estadisticas` | Estadísticas Bonoloto |
 | `/bonoloto/historial` | Historial Bonoloto |

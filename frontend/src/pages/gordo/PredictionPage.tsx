@@ -3,7 +3,8 @@ import {
   Title, Stack, Paper, Grid, Card, Group, Button, Badge,
   Alert, Text, Loader, NumberInput, Box
 } from '@mantine/core'
-import { IconRefresh, IconInfoCircle, IconAlertTriangle } from '@tabler/icons-react'
+import { IconRefresh, IconInfoCircle, IconAlertTriangle, IconSparkles } from '@tabler/icons-react'
+import { Link } from 'react-router-dom'
 import { predictionsApi } from '../../services/api'
 
 interface Prediction {
@@ -64,6 +65,18 @@ export default function PredictionPage() {
           Actualizar Predicción
         </Button>
       </div>
+
+      <Alert icon={<IconSparkles size={16} />} color="blue" variant="light">
+        <Group justify="space-between" wrap="wrap">
+          <Text size="sm">
+            Esta predicción IA es complementaria. Para una cartera con cobertura, claves y
+            probabilidades exactas por categoría, usa el Generador inteligente.
+          </Text>
+          <Button component={Link} to="/gordo" size="xs" variant="light">
+            Ir al Generador
+          </Button>
+        </Group>
+      </Alert>
 
       <Alert icon={<IconAlertTriangle size={16} />} color="red" variant="light">
         <Text size="sm">

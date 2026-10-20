@@ -47,61 +47,72 @@ npm run dev
 
 ## 📊 Uso de la Aplicación
 
-### Predicción IA
+La app es **multi‑juego**: el selector de la cabecera cambia entre El Gordo y
+Bonoloto. Cada juego tiene su propia navegación.
 
-1. Navega a `/prediction`
-2. El sistema genera automáticamente una predicción usando:
-   - **Transformer**: Modelos de attention para secuencias
-   - **LSTM**: Redes recurrentes para patrones temporales
-   - **Statistical**: Análisis de frecuencias históricas
-3. Puedes ver:
-   - Números predichos (5 del 1-54)
-   - Número clave (0-9)
-   - Confianza del modelo
-   - Combinaciones alternativas
+### El Gordo de la Primitiva
 
-### Estadísticas
+1. **Generador** (`/gordo`): elige entre 1 y 10 apuestas y una estrategia
+   (`big_prize`, `balanced`, `coverage`, `statistical`). Muestra el coste, la
+   cobertura, el riesgo de compartir premio, las probabilidades exactas de las
+   8 categorías, el reintegro, la simulación y recomendaciones.
+2. **Estadísticas** (`/gordo/statistics`): números frecuentes, calientes, fríos,
+   retrasados, pares y distribución de claves sobre los 1.123 sorteos desde
+   2005.
+3. **Historial** (`/gordo/history`): últimos sorteos con la fuente del dato y
+   botón de actualización.
+4. **Predicción IA** (`/gordo/prediction`): página legacy que enlaza al nuevo
+   generador.
 
-1. Navega a `/statistics`
-2. Visualiza:
-   - Números calientes (alta frecuencia)
-   - Números fríos (baja frecuencia)
-   - Distribución de números clave
-   - Patrones históricos
+### Bonoloto
 
-### Historial
+1. **Generador** (`/bonoloto`): de 1 a 10 apuestas con estrategia, cobertura,
+   reintegros, probabilidades y análisis.
+2. **Estadísticas** (`/bonoloto/estadisticas`) e **historial**
+   (`/bonoloto/historial`).
 
-1. Navega a `/history`
-2. Revisa los últimos 52 sorteos
-3. Puedes actualizar los datos manualmente
+### Rutas legacy
+
+Las rutas antiguas (`/prediction`, `/statistics`, `/history`,
+`/weekly-combinations`) redirigen a sus equivalentes bajo `/gordo`.
 
 ## 🐳 Docker
 
+El repositorio incluye un `Dockerfile` en la raíz que construye el frontend y lo
+sirve con FastAPI en el puerto **8000**:
+
 ```bash
-# Construir y ejecutar
-docker-compose up --build
-
-# Solo backend
-docker-compose up backend
-
-# Solo frontend
-docker-compose up frontend
+docker build -t lotor .
+docker run -p 8000:8000 lotor
 ```
+
+También existe `docker-compose.yml` para desarrollo. En producción (Coolify) se
+usa el `Dockerfile` raíz con `backend/requirements-no-torch.txt`; no es
+necesario instalar PyTorch.
 
 ## 🔧 API Endpoints
 
-### Predicciones
+### Generador de El Gordo (`/api/v1/gordo`)
+- `GET /meta` - Reglas, dataset y estrategias
+- `GET /next-draw` - Próximo sorteo (domingos)
+- `GET /history?limit=50` - Últimos sorteos
+- `GET /stats` - Estadísticas, claves y probabilidades
+- `POST /generate` / `GET /generate` - Cartera de 1 a 10 apuestas
+- `GET|POST /refresh` - Actualizar histórico desde Lotoideas/SELAE
+
+### Generador de Bonoloto (`/api/v1/bonoloto`)
+- `GET /meta`, `GET /next-draw`, `GET /history`, `GET /stats`
+- `POST /generate` / `GET /generate` - Cartera de 1 a 10 apuestas
+- `GET|POST /refresh` - Actualizar histórico
+
+### Predicción IA legacy
 - `POST /api/v1/predictions/predict` - Predicción completa (ensemble)
 - `POST /api/v1/predictions/predict/statistical` - Predicción estadística
 - `GET /api/v1/predictions/models/status` - Estado de modelos
-
-### Historial
 - `GET /api/v1/history/recent` - Últimos sorteos
 - `GET /api/v1/history/date/{date}` - Sorteo específico
 - `GET /api/v1/history/range` - Rango de fechas
 - `GET /api/v1/history/refresh` - Actualizar datos
-
-### Estadísticas
 - `GET /api/v1/stats/general` - Estadísticas generales
 - `GET /api/v1/stats/number/{num}` - Estadísticas de número
 - `GET /api/v1/stats/patterns` - Análisis de patrones

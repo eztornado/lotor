@@ -44,10 +44,11 @@ export const GAMES: GameDefinition[] = [
     color: 'blue',
     tagline: '5 números del 1 al 54 + número clave',
     description:
-      'Predicciones con ensemble de Machine Learning, estadísticas detalladas, historial completo y el sistema de 7 combinaciones semanales.',
+      'Generador de carteras de 1 a 10 apuestas optimizadas con el histórico completo desde 2005: cobertura de números, pares y tríos, claves, reintegro y anti-popularidad, además de predicción IA, estadísticas e historial.',
     basePath: '/gordo',
     nav: [
-      { label: 'Predicción', path: '/gordo/prediction', icon: IconBrain },
+      { label: 'Generador', path: '/gordo', icon: IconSparkles },
+      { label: 'Predicción IA', path: '/gordo/prediction', icon: IconBrain },
       { label: 'Estadísticas', path: '/gordo/statistics', icon: IconChartBar },
       { label: 'Historial', path: '/gordo/history', icon: IconHistory },
       { label: '7 Combinaciones', path: '/gordo/weekly-combinations', icon: IconTarget },

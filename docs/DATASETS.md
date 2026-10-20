@@ -1,204 +1,124 @@
-# 📊 Fuentes de Datos - LoTor
+# 📊 Fuentes de datos - LoTor
 
-## 🎯 Problema Resuelto
+## 🎯 Situación
 
-**SELAE no tiene API oficial** para obtener datos históricos de El Gordo de la Primitiva. Sin embargo, he implementado un sistema robusto con **múltiples fuentes de datos** y **estrategia de fallback**.
+**SELAE no ofrece una API histórica oficial**. Los generadores de carteras de
+LoTor funcionan con **datasets CSV completos** y un importador reproducible
+desde las hojas públicas de [Lotoideas](https://www.lotoideas.com/), que publican
+los resultados oficiales de SELAE. Los endpoints legacy de predicción conservan
+un sistema de fuentes con fallback.
 
-## 🔧 Solución Implementada
+## 📁 Datasets de los generadores
 
-### 1. RSS Feed Oficial (Prioridad 1)
-```
-Fuente: https://www.loteriasyapuestas.es/es/feed/gordo-primitiva
-Tipo: RSS feed oficial de SELAE
-Formato: XML/RSS
-Ventajas:
-- Fuente oficial
-- Actualización en tiempo real
-- Sin scraping web
-```
+### El Gordo de la Primitiva
 
-### 2. LoteriaAPI (Prioridad 2)
-```
-Fuente: https://loteriasapi.com/
-Tipo: API de terceros gratuita
-Formato: JSON
-Ventajas:
-- Datos consolidados
-- Buen formato
-- API REST estándar
-```
+- **Fichero**: `backend/data/raw/gordo_historical.csv`
+- **Formato**:
 
-### 3. Downtack API (Prioridad 3)
-```
-Fuente: https://downtack.com/es/api-loterias-españa.html
-Tipo: API de terceros
-Formato: JSON, XML, CSV
-Ventajas:
-- Múltiples formatos
-- Datos históricos extensos
-- API flexible
-```
+  ```csv
+  date,n1,n2,n3,n4,n5,key_number,source
+  2026-10-18,11,14,29,31,34,8,manual_selae
+  2026-10-11,3,15,27,38,49,7,lotoideas_selae
+  ```
 
-### 4. CSV Fallback (Prioridad 4)
-```
-Fuente: Local o remota
-Tipo: Dataset estático
-Formato: CSV
-Ubicación: backend/data/raw/primitiva_historical.csv
-Ventajas:
-- Offline-first
-- Datos iniciales garantizados
-- Sin dependencias externas
-```
+- **Cobertura**: desde el **06/02/2005** (inicio del formato actual de 5 números
+  + clave) hasta la última actualización. A fecha de esta documentación: **1.123
+  sorteos** (18/10/2026).
+- **Fuentes**: `manual_selae` para resultados añadidos a mano y
+  `lotoideas_selae` para los importados.
+- **Carga**: `app/services/gordo_data.py` valida cada sorteo (5 números únicos
+  entre 1 y 54, clave entre 0 y 9, fecha única) y cachea el histórico en memoria.
+- **Actualización**:
 
-## 🏗️ Arquitectura del Sistema
+  ```bash
+  # Importar desde la hoja pública y fusionar con el CSV local
+  python backend/scripts/import_gordo.py
 
-### Strategy Pattern
-```
-DataSourceStrategy (interfaz)
-├── RSSFeedSource
-├── LoteriaAPISource
-├── DowntackAPISource
-└── CSVSource
-```
+  # Solo validar/leer el CSV sin salir a la red
+  python backend/scripts/import_gordo.py --offline
+  ```
 
-### Fallback Chain
-```
-1. Intentar RSS oficial
-2. Si falla → LoteriaAPI
-3. Si falla → Downtack API
-4. Si falla → CSV local
-5. Si falla → Datos dummy (desarrollo)
-```
+  También por API: `GET|POST /api/v1/gordo/refresh`.
 
-## 📁 Dataset Inicial
+### Bonoloto
 
-He creado un dataset inicial con **100 sorteos históricos** (2022-2024) en:
-```
-backend/data/raw/primitiva_historical.csv
-```
+- **Fichero**: `backend/data/raw/bonoloto_historical.csv`
+- **Formato**:
 
-### Formato del CSV
-```csv
-date,n1,n2,n3,n4,n5,key_number,source
-2024-12-01,3,15,27,38,49,7,historical
-2024-11-24,8,21,33,41,52,4,historical
-...
-```
+  ```csv
+  date,n1,n2,n3,n4,n5,n6,complementario,reintegro,source
+  ```
 
-## 🔌 Uso del Sistema
+- **Cobertura**: desde el **28/02/1988** (≈ 9.420 sorteos).
+- **Carga**: `app/services/bonoloto_data.py`, con validación y caché en memoria.
+- **Actualización**:
 
-### Obtener Datos
-```python
-from app.services.data_sources import create_data_manager
+  ```bash
+  python backend/scripts/import_bonoloto.py
+  python backend/scripts/import_bonoloto.py --offline
+  ```
 
-# Crear gestor
-manager = create_data_manager()
+  También por API: `GET|POST /api/v1/bonoloto/refresh`.
 
-# Obtener datos (usará estrategia de fallback automática)
-draws = manager.get_historical_data(count=52)
+### Próximo sorteo
 
-# Forzar actualización desde fuentes externas
-draws = manager.get_historical_data(force_refresh=True, count=100)
-```
+- **El Gordo**: `next_gordo_date()` avanza al siguiente **domingo** con corte de
+  venta a las 21:00.
+- **Bonoloto**: `next_bonoloto_date()` avanza al siguiente día natural saltando
+  el domingo.
 
-### Ejemplo de Datos
-```python
-{
-    'date': datetime(2024, 12, 1),
-    'numbers': [3, 15, 27, 38, 49],
-    'key_number': 7,
-    'source': 'selae_rss'  # 'loteriaapi', 'csv', etc.
-}
-```
-
-## 🚀 Ventajas de esta Solución
-
-### 1. **Robustez**
-- Múltiples fuentes con fallback automático
-- Si una falla, otra toma el relevo
-- Sistema nunca queda sin datos
-
-### 2. **Datos Reales**
-- RSS oficial como fuente primaria
-- APIs de terceros verificadas
-- Dataset inicial con datos históricos
-
-### 3. **Offline-First**
-- CSV local para inicio rápido
-- Cache inteligente
-- Funciona sin internet
-
-### 4. **Escalabilidad**
-- Fácil agregar nuevas fuentes
-- Strategy pattern extensible
-- Sin cambios en el código cliente
-
-### 5. **Monitorización**
-- Logs detallados de cada fuente
-- Tracking de source de datos
-- Métricas de éxito/fallo
-
-## 📊 Flujo de Datos
+## 🔄 Flujo de actualización
 
 ```
-Usuario solicita datos
+Script / endpoint de refresh
     ↓
-Verificar cache local
+Descarga la hoja pública de Lotoideas
     ↓
-¿Cache válido? ──Sí──→ Retornar datos cacheados
-    ↓No
-Intentar RSS oficial
+Parsea y valida fechas, números y clave/reintegro
     ↓
-¿Funciona? ──No─→ Intentar LoteriaAPI
-    ↓Sí           ↓
-Guardar cache    ¿Funciona? ──No─→ Intentar Downtack
-    ↓No                    ↓Sí
-Retornar datos   Guardar cache / Retornar datos
+Fusiona con el CSV local sin duplicar sorteos
+    ↓
+Guarda el CSV y limpia la caché en memoria
+    ↓
+La siguiente generación usa el histórico actualizado
 ```
 
-## 🔍 Ejemplos de Uso
+Si la descarga falla, el CSV local sigue siendo la fuente de verdad y la API
+responde con el error sin dejar el dataset a medias.
 
-### API Endpoints
+## 🧪 Validación
+
+Los tests de cada juego comprueban:
+
+- que todas las filas tienen el número correcto de columnas y rangos válidos,
+- que no hay fechas duplicadas ni números repetidos dentro de un sorteo,
+- que el dataset tiene cobertura suficiente para generar carteras,
+- que el próximo sorteo se calcula correctamente.
+
 ```bash
-# Obtener últimos sorteos (usará cache si existe)
+cd backend
+PYTHONPATH=. python -m pytest tests/test_gordo.py tests/test_bonoloto.py -q
+```
+
+## 🔌 Endpoints legacy de datos
+
+La página de predicción IA usa los endpoints antiguos:
+
+```bash
 GET /api/v1/history/recent?limit=52
-
-# Forzar actualización desde fuentes externas
-GET /api/v1/history/refresh
-
-# Ver estadísticas
+GET /api/v1/history/date/{date}
+GET /api/v1/history/range
+GET|POST /api/v1/history/refresh
 GET /api/v1/stats/general
+GET /api/v1/stats/number/{num}
+GET /api/v1/stats/patterns
 ```
 
-### Python
-```python
-from app.services.data_sources import create_data_manager
+Estos endpoints mantienen la cadena de fallback (RSS/API de terceros/CSV) para
+no romper la predicción legacy.
 
-manager = create_data_manager()
+## 🔗 Fuentes
 
-# Obtener datos con fallback automático
-draws = manager.get_historical_data(count=52)
-
-# Forzar refresh desde fuentes externas
-draws = manager.get_historical_data(force_refresh=True)
-```
-
-## 📈 Próximas Mejoras
-
-### Short-term
-- [ ] Agregar más APIs de terceros
-- [ ] Implementar rate limiting
-- [ ] Sistema de alertas cuando todas las fuentes fallan
-
-### Long-term
-- [ ] Dataset completo desde inicio de lotería
-- [ ] Sistema de validación de datos
-- [ ] Machine learning para detectar datos corruptos
-
----
-
-**Fuentes de Información:**
-- [Loteria API: API Loterías España Gratis (JSON)](https://loteriasapi.com/)
-- [Lotoideas - Primitiva Resultados Históricos](https://www.lotoideas.com/primitiva-resultados-historicos-de-todos-los-sorteos/)
-- [SELAE - Canales RSS](https://www.loteriasyapuestas.es/es/canales-rss)
+- [Lotoideas - El Gordo de la Primitiva](https://www.lotoideas.com/el-gordo-de-la-primitiva-resultados-historicos-de-todos-los-sorteos/)
+- [Lotoideas - Bonoloto](https://www.lotoideas.com/bonoloto-resultados-historicos-de-todos-los-sorteos/)
+- [SELAE](https://www.loteriasyapuestas.es/)

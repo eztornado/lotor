@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-d
 import { Container, Text } from '@mantine/core'
 import Header from './components/layout/Header'
 import HomePage from './pages/HomePage'
+import GordoGeneratorPage from './pages/gordo/GordoGeneratorPage'
 import PredictionPage from './pages/gordo/PredictionPage'
 import StatisticsPage from './pages/gordo/StatisticsPage'
 import HistoryPage from './pages/gordo/HistoryPage'
@@ -21,6 +22,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
 
             {/* El Gordo de la Primitiva */}
+            <Route path="/gordo" element={<GordoGeneratorPage />} />
             <Route path="/gordo/prediction" element={<PredictionPage />} />
             <Route path="/gordo/statistics" element={<StatisticsPage />} />
             <Route path="/gordo/history" element={<HistoryPage />} />
