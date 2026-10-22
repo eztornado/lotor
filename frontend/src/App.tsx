@@ -11,6 +11,7 @@ import BonolotoPage from './pages/bonoloto/BonolotoPage'
 import BonolotoStatsPage from './pages/bonoloto/BonolotoStatsPage'
 import BonolotoHistoryPage from './pages/bonoloto/BonolotoHistoryPage'
 import QuinielaPage from './pages/quiniela/QuinielaPage'
+import QuinielaPredictionPage from './pages/quiniela/QuinielaPredictionPage'
 import QuinielaStatsPage from './pages/quiniela/QuinielaStatsPage'
 import QuinielaHistoryPage from './pages/quiniela/QuinielaHistoryPage'
 import { LEGACY_REDIRECTS } from './games'
@@ -38,6 +39,7 @@ function App() {
 
             {/* La Quiniela */}
             <Route path="/quiniela" element={<QuinielaPage />} />
+            <Route path="/quiniela/prediccion" element={<QuinielaPredictionPage />} />
             <Route path="/quiniela/estadisticas" element={<QuinielaStatsPage />} />
             <Route path="/quiniela/historial" element={<QuinielaHistoryPage />} />
 

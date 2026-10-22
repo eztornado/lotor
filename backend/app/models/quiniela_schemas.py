@@ -117,6 +117,7 @@ class QuinielaTicket(BaseModel):
     coverage: list[float]
     expanded_columns: Optional[list[dict[str, Any]]] = None
     expanded_note: Optional[str] = None
+    variant: Optional[str] = None
 
 
 class QuinielaGenerateResponse(BaseModel):
@@ -135,6 +136,13 @@ class QuinielaGenerateResponse(BaseModel):
     analysis: dict[str, Any]
     recommendations: list[str]
     disclaimer: str
+
+
+class QuinielaPredictionResponse(QuinielaGenerateResponse):
+    alternatives: list[QuinielaTicket]
+    model: dict[str, Any]
+    target: dict[str, Any]
+    reasoning: list[str]
 
 
 class QuinielaMetaResponse(BaseModel):

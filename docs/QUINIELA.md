@@ -196,6 +196,30 @@ agotar presupuesto y límites. Por eso el modo múltiple usa siempre el objetivo
 equilibrado y la interfaz no ofrece estrategias; éstas se reservan para la
 cartera de columnas simples, donde sí cambian qué columnas se eligen.
 
+### Predicción IA (máximo premio)
+
+La sección **Predicción IA** no reutiliza el objetivo equilibrado: maximiza
+exactamente la probabilidad del premio alto. Bajo independencia,
+
+```
+P(15) = P(acertar los 14 partidos) × P(marcador del pleno)
+      = (∏ c_i) × p_pleno
+```
+
+Como `p_pleno` depende solo del marcador elegido y no de los signos, el
+optimizador maximiza `Σ log(c_i)` con búsqueda greedy y búsqueda local sobre
+los límites de presupuesto, dobles y triples. El pleno se fija en el marcador
+más probable del modelo. Es un objetivo distinto al del generador: aquí no se
+premia la cobertura de 10-12 aciertos, sino la probabilidad de acertar los 14
+partidos y el pleno.
+
+La respuesta incluye la probabilidad exacta de 15, 14 y al menos 13, el
+retorno estimado, variantes forzando el segundo signo en los partidos más
+abiertos y una explicación legible. Esa explicación se construye de forma
+determinista a partir del modelo y del histórico. No se llama a un LLM
+generativo: un modelo de lenguaje no mejora la calibración de las
+probabilidades y sí añadiría opacidad y dependencia externa.
+
 ### Cartera de columnas simples
 
 Para varias columnas simples se generan candidatos deterministas, variantes de
@@ -218,6 +242,7 @@ Base: `/api/v1/quiniela`
 | `GET` | `/jornadas` | Jornadas del calendario local |
 | `GET` | `/jornada?jornada=17` | Predicciones 1-X-2 y pleno |
 | `GET` | `/jornada/{n}` | Alias con el número en la ruta |
+| `GET` | `/prediction` | Boleto con mayor probabilidad de pleno al 15 |
 | `GET` | `/stats` | Dataset, modelo, ligas, equipos y backtest |
 | `GET` | `/backtest?limit=400` | Backtest fuera de muestra |
 | `GET` | `/history?limit=50` | Últimos partidos |
@@ -250,6 +275,11 @@ Base: `/api/v1/quiniela`
   `multiple` se normaliza a `balanced`, porque el óptimo del boleto único no
   depende de la estrategia.
 - `seed`: opcional; se devuelve para reproducir el resultado.
+
+`GET /prediction` acepta `jornada`, `season`, `budget`, `max_doubles`,
+`max_triples` y `seed`, y devuelve la combinación principal, alternativas,
+`target` con las probabilidades 15/14/≥13, el bloque `model` con backtest y
+`reasoning` con la explicación.
 
 ### Respuesta (resumen)
 
@@ -329,6 +359,7 @@ Base: `/api/v1/quiniela`
 | Ruta | Página |
 | --- | --- |
 | `/quiniela` | Generador (`pages/quiniela/QuinielaPage.tsx`) |
+| `/quiniela/prediccion` | Predicción IA: máxima probabilidad de pleno al 15 |
 | `/quiniela/estadisticas` | Modelo, ligas, equipos y backtest |
 | `/quiniela/historial` | Últimos partidos con filtros |
 
@@ -362,6 +393,7 @@ Cubren:
 - Poisson-binomial exacta,
 - coste y expansión de múltiples,
 - presupuesto, dobles/triples y recorte de columnas,
+- objetivo P(15), alternativas y explicación de la predicción IA,
 - reproducibilidad con semilla,
 - endpoints principales y errores de validación.
 

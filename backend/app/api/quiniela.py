@@ -15,6 +15,7 @@ from app.models.quiniela_schemas import (
     QuinielaHistoryMatch,
     QuinielaJornadaResponse,
     QuinielaMetaResponse,
+    QuinielaPredictionResponse,
     QuinielaStatsResponse,
     QuinielaTeamResponse,
 )
@@ -23,6 +24,7 @@ from app.services.quiniela_generator import (
     DEFAULT_BUDGET_EUR,
     GAME_INFO,
     STRATEGIES,
+    generate_prediction,
     generate_quiniela,
     get_jornada_predictions,
     list_jornadas,
@@ -182,6 +184,43 @@ def generate_get(
         seed=seed,
     )
     return _generate(request)
+
+
+@router.get("/prediction", response_model=QuinielaPredictionResponse)
+def get_prediction(
+    jornada: Optional[int] = Query(default=None, ge=1, le=99),
+    season: Optional[str] = Query(default=None),
+    budget: float = Query(default=DEFAULT_BUDGET_EUR, ge=0.75, le=1_000),
+    max_doubles: int = Query(default=4, ge=0, le=7),
+    max_triples: int = Query(default=2, ge=0, le=4),
+    seed: Optional[int] = Query(default=None, ge=0),
+):
+    """
+    Predicción IA: boleto con la mayor probabilidad de pleno al 15.
+
+    Usa el ensemble Poisson Dixon-Coles + Elo, el histórico completo y una
+    optimización exacta de P(15). Devuelve además variantes alternativas y la
+    explicación de la decisión.
+    """
+    try:
+        payload = generate_prediction(
+            jornada=jornada,
+            season=season,
+            budget=budget,
+            max_doubles=max_doubles,
+            max_triples=max_triples,
+            seed=seed,
+        )
+        payload["model"]["backtest"] = _quick_backtest()
+        return payload
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.exception(f"Error generando la predicción de La Quiniela: {exc}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generando la predicción de La Quiniela: {exc}",
+        )
 
 
 @router.get("/stats", response_model=QuinielaStatsResponse)

@@ -60,6 +60,7 @@ frontend/
     │   │   └── BonolotoHistoryPage.tsx
     │   └── quiniela/             # Páginas de La Quiniela
     │       ├── QuinielaPage.tsx       # Generador de múltiples/columnas
+    │       ├── QuinielaPredictionPage.tsx  # Predicción IA (pleno al 15)
     │       ├── QuinielaStatsPage.tsx
     │       └── QuinielaHistoryPage.tsx
     └── services/
@@ -84,6 +85,7 @@ frontend/
 | `/bonoloto/estadisticas` | Estadísticas Bonoloto |
 | `/bonoloto/historial` | Historial Bonoloto |
 | `/quiniela` | Generador de La Quiniela |
+| `/quiniela/prediccion` | Predicción IA: máxima probabilidad del pleno |
 | `/quiniela/estadisticas` | Estadísticas y backtest |
 | `/quiniela/historial` | Historial de partidos |
 

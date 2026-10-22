@@ -78,10 +78,11 @@ export const GAMES: GameDefinition[] = [
     color: 'teal',
     tagline: '15 partidos: 14 signos 1-X-2 + pleno al 15',
     description:
-      'Predicciones estadísticas con Poisson Dixon-Coles, Elo y priors de competición. Genera un múltiple optimizado con dobles y triples o una cartera de columnas simples dentro de tu presupuesto.',
+      'Predicciones estadísticas con Poisson Dixon-Coles, Elo y priors de competición. Genera un múltiple optimizado con dobles y triples, una cartera de columnas simples o la predicción IA con mayor probabilidad de pleno al 15.',
     basePath: '/quiniela',
     nav: [
       { label: 'Generador', path: '/quiniela', icon: IconSparkles },
+      { label: 'Predicción IA', path: '/quiniela/prediccion', icon: IconBrain },
       { label: 'Estadísticas', path: '/quiniela/estadisticas', icon: IconChartBar },
       { label: 'Historial', path: '/quiniela/historial', icon: IconHistory },
     ],

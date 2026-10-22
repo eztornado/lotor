@@ -20,6 +20,7 @@ from app.services.quiniela_generator import (
     MAX_EXPANDED_COLUMNS,
     STRATEGIES,
     build_ticket,
+    generate_prediction,
     generate_quiniela,
     poisson_binomial,
 )
@@ -394,6 +395,56 @@ def test_pleno_probability_is_consistent(predictions) -> None:
     assert sum(option["probability"] for option in pleno.score_options) <= 1.0 + 1e-6
 
 
+def test_prediction_targets_top_prize() -> None:
+    result = generate_prediction(
+        jornada=17,
+        budget=20,
+        max_doubles=4,
+        max_triples=2,
+        seed=42,
+    )
+    ticket = result["tickets"][0]
+    balanced = generate_quiniela(
+        jornada=17,
+        mode="multiple",
+        budget=20,
+        max_doubles=4,
+        max_triples=2,
+        seed=42,
+    )["tickets"][0]
+    assert result["strategy"] == "jackpot"
+    assert result["target"]["objective"] == "max_probability_pleno_15"
+    assert ticket["category_probabilities"]["15"] == pytest.approx(
+        result["target"]["top_prize_probability"], abs=1e-6
+    )
+    # El objetivo es P(15), así que no puede ser peor que el boleto equilibrado.
+    assert (
+        ticket["category_probabilities"]["15"]
+        >= balanced["category_probabilities"]["15"] - 1e-12
+    )
+    assert ticket["cost"] <= 20 + 1e-9
+    assert result["reasoning"]
+    assert result["model"]["type"].startswith("ensemble")
+
+
+def test_prediction_alternatives_and_budget() -> None:
+    result = generate_prediction(
+        jornada=17,
+        budget=10,
+        max_doubles=3,
+        max_triples=1,
+        seed=7,
+    )
+    ticket = result["tickets"][0]
+    assert ticket["cost"] <= 10 + 1e-9
+    assert ticket["doubles"] <= 3
+    assert ticket["triples"] <= 1
+    assert isinstance(result["alternatives"], list)
+    assert all(
+        alternative["cost"] <= 10 + 1e-9 for alternative in result["alternatives"]
+    )
+
+
 # ----------------------------------------------------------------------
 # API
 # ----------------------------------------------------------------------
@@ -451,6 +502,23 @@ def test_api_generate_get(client) -> None:
     payload = response.json()
     assert payload["portfolio"]["tickets"] == 3
     assert payload["portfolio"]["cost"] == pytest.approx(2.25)
+
+
+def test_api_prediction(client) -> None:
+    response = client.get(
+        "/api/v1/quiniela/prediction?jornada=17&budget=10"
+        "&max_doubles=3&max_triples=1&seed=11"
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mode"] == "multiple"
+    assert payload["strategy_label"] == "Máxima probabilidad del pleno"
+    assert payload["tickets"][0]["cost"] <= 10 + 1e-9
+    assert payload["target"]["objective"] == "max_probability_pleno_15"
+    assert payload["target"]["top_prize_probability"] > 0
+    assert payload["reasoning"]
+    assert "backtest" in payload["model"]
+    assert payload["jornada"]["jornada"] == 17
 
 
 def test_api_generate_validation(client) -> None:

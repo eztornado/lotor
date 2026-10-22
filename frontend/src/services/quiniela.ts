@@ -114,6 +114,7 @@ export interface QuinielaTicket {
   coverage: number[]
   expanded_columns: Array<{ signs: string[]; pleno: string }> | null
   expanded_note: string | null
+  variant?: string | null
 }
 
 export interface QuinielaPortfolio {
@@ -177,6 +178,37 @@ export interface QuinielaGenerateResponse {
   analysis: QuinielaAnalysis
   recommendations: string[]
   disclaimer: string
+}
+
+export interface QuinielaPredictionResponse extends QuinielaGenerateResponse {
+  alternatives: QuinielaTicket[]
+  model: {
+    type: string
+    version: string
+    objective: string
+    dataset: QuinielaStatsResponse['dataset']
+    config: Record<string, number>
+    explanation: string
+    backtest: QuinielaStatsResponse['backtest'] | null
+  }
+  target: {
+    objective: string
+    top_prize_probability: number
+    second_prize_probability: number
+    at_least_13_probability: number
+    at_least_10_probability: number
+    expected_return: { low: number; average: number; high: number }
+  }
+  reasoning: string[]
+}
+
+export interface QuinielaPredictionParams {
+  jornada?: number
+  season?: string
+  budget: number
+  max_doubles: number
+  max_triples: number
+  seed?: number
 }
 
 export interface QuinielaMetaResponse {
@@ -314,6 +346,19 @@ export const quinielaApi = {
   },
   generate: async (params: QuinielaGenerateParams) => {
     const response = await api.post<QuinielaGenerateResponse>('/quiniela/generate', params)
+    return response.data
+  },
+  prediction: async (params: QuinielaPredictionParams) => {
+    const query = new URLSearchParams()
+    if (params.jornada != null) query.set('jornada', String(params.jornada))
+    if (params.season) query.set('season', params.season)
+    query.set('budget', String(params.budget))
+    query.set('max_doubles', String(params.max_doubles))
+    query.set('max_triples', String(params.max_triples))
+    if (params.seed != null) query.set('seed', String(params.seed))
+    const response = await api.get<QuinielaPredictionResponse>(
+      `/quiniela/prediction?${query.toString()}`,
+    )
     return response.data
   },
   stats: async () => {

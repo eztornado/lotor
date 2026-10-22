@@ -33,7 +33,7 @@ import datetime as dt
 import math
 from dataclasses import dataclass, field
 from itertools import product
-from typing import Iterable, Optional, Sequence
+from typing import Callable, Iterable, Optional, Sequence
 
 import numpy as np
 from loguru import logger
@@ -417,12 +417,12 @@ def _greedy_multiple(
     pleno_score: tuple[int, int],
     pleno_probability: float,
     config: QuinielaConfig,
-    strategy: str,
     budget: float,
+    objective: Callable[[Ticket], float],
 ) -> Ticket:
     signs: list[tuple[str, ...]] = [(sign,) for sign in base]
-    current = build_ticket(signs, probabilities, pleno_score, pleno_probability, strategy)
-    current_value = _utility(current, strategy)
+    current = build_ticket(signs, probabilities, pleno_score, pleno_probability)
+    current_value = objective(current)
 
     while True:
         best_ticket: Optional[Ticket] = None
@@ -439,9 +439,9 @@ def _greedy_multiple(
                 if not _fits(trial, config, budget):
                     continue
                 ticket = build_ticket(
-                    trial, probabilities, pleno_score, pleno_probability, strategy
+                    trial, probabilities, pleno_score, pleno_probability
                 )
-                value = _utility(ticket, strategy)
+                value = objective(ticket)
                 if value > best_value:
                     best_value = value
                     best_ticket = ticket
@@ -461,12 +461,12 @@ def _local_search_multiple(
     pleno_score: tuple[int, int],
     pleno_probability: float,
     config: QuinielaConfig,
-    strategy: str,
     budget: float,
+    objective: Callable[[Ticket], float],
 ) -> Ticket:
     """Intercambia un signo de un partido por otro de otro partido."""
     best = ticket
-    best_value = _utility(best, strategy)
+    best_value = objective(best)
 
     for _ in range(config.local_search_passes):
         improved = False
@@ -497,9 +497,8 @@ def _local_search_multiple(
                             probabilities,
                             pleno_score,
                             pleno_probability,
-                            strategy,
                         )
-                        value = _utility(candidate, strategy)
+                        value = objective(candidate)
                         if value > best_value + 1e-12:
                             best = candidate
                             best_value = value
@@ -507,6 +506,70 @@ def _local_search_multiple(
         if not improved:
             break
     return best
+
+
+def _seed_bases(probabilities: Sequence[dict[str, float]]) -> list[tuple[str, list[str]]]:
+    """Columnas de partida: favoritos, empates y segundos signos."""
+    favourites = [
+        max(probability, key=probability.get) for probability in probabilities
+    ]
+    bases: list[tuple[str, list[str]]] = [
+        ("Columna más probable", favourites),
+        (
+            "Variante con empates",
+            [
+                "X"
+                if probability["X"] + 0.06 >= max(probability.values())
+                else max(probability, key=probability.get)
+                for probability in probabilities
+            ],
+        ),
+    ]
+    for index in range(MATCHES_PER_TICKET):
+        ordered = sorted(
+            probabilities[index], key=probabilities[index].get, reverse=True
+        )
+        alternative = list(favourites)
+        alternative[index] = ordered[1]
+        bases.append((f"Variante con {ordered[1]} en el partido {index + 1}", alternative))
+    return bases
+
+
+def _optimize_bases(
+    bases: Sequence[tuple[str, Sequence[str]]],
+    probabilities: Sequence[dict[str, float]],
+    pleno_score: tuple[int, int],
+    pleno_probability: float,
+    config: QuinielaConfig,
+    budget: float,
+    objective: Callable[[Ticket], float],
+) -> list[tuple[str, Ticket]]:
+    """Optimiza cada columna de partida y la devuelve ordenada por objetivo."""
+    ranked: list[tuple[str, Ticket]] = []
+    for label, base in bases:
+        if not _fits(base, config, budget):
+            continue
+        candidate = _greedy_multiple(
+            base,
+            probabilities,
+            pleno_score,
+            pleno_probability,
+            config,
+            budget,
+            objective,
+        )
+        candidate = _local_search_multiple(
+            candidate,
+            probabilities,
+            pleno_score,
+            pleno_probability,
+            config,
+            budget,
+            objective,
+        )
+        ranked.append((label, candidate))
+    ranked.sort(key=lambda item: objective(item[1]), reverse=True)
+    return ranked
 
 
 def optimize_multiple(
@@ -523,56 +586,124 @@ def optimize_multiple(
     if budget < TICKET_PRICE_EUR:
         raise ValueError("El presupuesto debe permitir al menos una columna (0,75 €)")
 
-    # Varias semillas: la columna de máxima probabilidad, una variante con
-    # empates y otra con los segundos signos. Nos quedamos con la mejor.
-    bases: list[list[str]] = [
-        [max(probability, key=probability.get) for probability in probabilities],
-        [
-            "X"
-            if probability["X"] + 0.06 >= max(probability.values())
-            else max(probability, key=probability.get)
-            for probability in probabilities
-        ],
-    ]
-    for index in range(MATCHES_PER_TICKET):
-        alternative = list(bases[0])
-        ordered = sorted(probabilities[index], key=probabilities[index].get, reverse=True)
+    def objective(ticket: Ticket) -> float:
+        return _utility(ticket, strategy)
+
+    ranked = _optimize_bases(
+        _seed_bases(probabilities),
+        probabilities,
+        pleno_score,
+        pleno_probability,
+        config,
+        budget,
+        objective,
+    )
+    if ranked:
+        return ranked[0][1]
+
+    # Con presupuesto mínimo siempre cabe una columna simple.
+    return build_ticket(
+        _sign_sets_from_column(
+            [max(probability, key=probability.get) for probability in probabilities]
+        ),
+        probabilities,
+        pleno_score,
+        pleno_probability,
+    )
+
+
+def _max_prize_objective(ticket: Ticket) -> float:
+    """Logaritmo de P(15): producto de coberturas por P(pleno)."""
+    return sum(math.log(max(value, 1e-12)) for value in ticket.coverage) + math.log(
+        max(ticket.pleno_probability, 1e-12)
+    )
+
+
+def optimize_max_prize(
+    predictions: Sequence[MatchPrediction],
+    pleno: MatchPrediction,
+    config: QuinielaConfig,
+) -> list[tuple[str, Ticket]]:
+    """
+    Optimiza el boleto que maximiza la probabilidad del pleno al 15.
+
+    P(15) = P(acertar los 14 partidos) × P(pleno). Como el pleno no depende de
+    los signos, el óptimo maximiza el producto de las coberturas. Ese objetivo
+    penaliza especialmente los partidos con cobertura baja, por lo que tiende a
+    concentrar dobles y triples en los partidos menos predecibles.
+
+    Devuelve el boleto y variantes forzadas para ofrecer alternativas reales.
+    """
+    probabilities = [prediction.probabilities for prediction in predictions[:MATCHES_PER_TICKET]]
+    pleno_score = _pleno_score(pleno)
+    pleno_probability = _pleno_probability(pleno, pleno_score)
+    budget = min(config.budget, config.max_columns * TICKET_PRICE_EUR)
+    if budget < TICKET_PRICE_EUR:
+        raise ValueError("El presupuesto debe permitir al menos una columna (0,75 €)")
+
+    bases = _seed_bases(probabilities)
+    ranked = _optimize_bases(
+        bases,
+        probabilities,
+        pleno_score,
+        pleno_probability,
+        config,
+        budget,
+        _max_prize_objective,
+    )
+    if not ranked:
+        ranked = [
+            (
+                "Columna más probable",
+                build_ticket(
+                    _sign_sets_from_column(bases[0][1]),
+                    probabilities,
+                    pleno_score,
+                    pleno_probability,
+                ),
+            )
+        ]
+
+    # Alternativas: forzamos el segundo signo en los partidos más abiertos y
+    # volvemos a optimizar. Así no son simples copias del boleto principal.
+    favourites = [max(probability, key=probability.get) for probability in probabilities]
+    uncertain = sorted(
+        range(MATCHES_PER_TICKET),
+        key=lambda index: max(probabilities[index].values()),
+    )
+    forced: list[tuple[str, list[str]]] = []
+    for index in uncertain[:3]:
+        ordered = sorted(
+            probabilities[index], key=probabilities[index].get, reverse=True
+        )
+        alternative = list(favourites)
         alternative[index] = ordered[1]
-        bases.append(alternative)
+        forced.append(
+            (
+                f"Variante: {ordered[1]} en el partido {index + 1}",
+                alternative,
+            )
+        )
+    ranked += _optimize_bases(
+        forced,
+        probabilities,
+        pleno_score,
+        pleno_probability,
+        config,
+        budget,
+        _max_prize_objective,
+    )
 
-    best: Optional[Ticket] = None
-    best_value = -math.inf
-    for base in bases:
-        if not _fits(base, config, budget):
+    seen: set[tuple[tuple[str, ...], ...]] = set()
+    unique: list[tuple[str, Ticket]] = []
+    for label, ticket in ranked:
+        key = tuple(ticket.signs)
+        if key in seen:
             continue
-        candidate = _greedy_multiple(
-            base, probabilities, pleno_score, pleno_probability, config, strategy, budget
-        )
-        candidate = _local_search_multiple(
-            candidate,
-            probabilities,
-            pleno_score,
-            pleno_probability,
-            config,
-            strategy,
-            budget,
-        )
-        value = _utility(candidate, strategy)
-        if value > best_value:
-            best = candidate
-            best_value = value
-
-    if best is None:
-        # Con presupuesto mínimo siempre cabe una columna simple.
-        base = bases[0]
-        best = build_ticket(
-            _sign_sets_from_column(base),
-            probabilities,
-            pleno_score,
-            pleno_probability,
-            strategy,
-        )
-    return best
+        seen.add(key)
+        unique.append((label, ticket))
+    unique.sort(key=lambda item: _max_prize_objective(item[1]), reverse=True)
+    return unique
 
 
 # ----------------------------------------------------------------------
@@ -959,6 +1090,55 @@ def _recommendations(
     return recommendations
 
 
+def _analysis_payload(bundle: PredictionBundle) -> dict[str, object]:
+    """Lectura común del modelo para el generador y la predicción IA."""
+    return {
+        "most_confident": [
+            {
+                "match_number": prediction.match_number,
+                "match": f"{prediction.home_raw} - {prediction.away_raw}",
+                "pick": max(prediction.probabilities, key=prediction.probabilities.get),
+                "probability": round(max(prediction.probabilities.values()), 4),
+            }
+            for prediction in sorted(
+                bundle.predictions,
+                key=lambda item: max(item.probabilities.values()),
+                reverse=True,
+            )[:3]
+        ],
+        "most_uncertain": [
+            {
+                "match_number": prediction.match_number,
+                "match": f"{prediction.home_raw} - {prediction.away_raw}",
+                "pick": max(prediction.probabilities, key=prediction.probabilities.get),
+                "probability": round(max(prediction.probabilities.values()), 4),
+            }
+            for prediction in sorted(
+                (item for item in bundle.predictions if not item.is_pleno),
+                key=lambda item: max(item.probabilities.values()),
+            )[:3]
+        ],
+        "average_confidence": round(
+            sum(prediction.confidence for prediction in bundle.predictions)
+            / max(1, len(bundle.predictions)),
+            4,
+        ),
+        "data_quality": {
+            "alta": sum(1 for prediction in bundle.predictions if prediction.data_quality == "alta"),
+            "media": sum(1 for prediction in bundle.predictions if prediction.data_quality == "media"),
+            "baja": sum(1 for prediction in bundle.predictions if prediction.data_quality == "baja"),
+            "sin_datos": sum(
+                1 for prediction in bundle.predictions if prediction.data_quality == "sin datos"
+            ),
+        },
+        "pleno": {
+            "score": f"{bundle.pleno_score[0]}-{bundle.pleno_score[1]}",
+            "probability": round(bundle.pleno_probability, 6),
+            "alternatives": bundle.pleno.score_options,
+        },
+    }
+
+
 # ----------------------------------------------------------------------
 # API interna
 # ----------------------------------------------------------------------
@@ -1086,57 +1266,246 @@ def generate_quiniela(
         "matches": matches,
         "tickets": ticket_payloads,
         "portfolio": portfolio,
-        "analysis": {
-            "most_confident": [
-                {
-                    "match_number": prediction.match_number,
-                    "match": f"{prediction.home_raw} - {prediction.away_raw}",
-                    "pick": max(prediction.probabilities, key=prediction.probabilities.get),
-                    "probability": round(max(prediction.probabilities.values()), 4),
-                }
-                for prediction in sorted(
-                    bundle.predictions,
-                    key=lambda item: max(item.probabilities.values()),
-                    reverse=True,
-                )[:3]
-            ],
-            "most_uncertain": [
-                {
-                    "match_number": prediction.match_number,
-                    "match": f"{prediction.home_raw} - {prediction.away_raw}",
-                    "pick": max(prediction.probabilities, key=prediction.probabilities.get),
-                    "probability": round(max(prediction.probabilities.values()), 4),
-                }
-                for prediction in sorted(
-                    (item for item in bundle.predictions if not item.is_pleno),
-                    key=lambda item: max(item.probabilities.values()),
-                )[:3]
-            ],
-            "average_confidence": round(
-                sum(prediction.confidence for prediction in bundle.predictions)
-                / max(1, len(bundle.predictions)),
-                4,
-            ),
-            "data_quality": {
-                "alta": sum(1 for prediction in bundle.predictions if prediction.data_quality == "alta"),
-                "media": sum(1 for prediction in bundle.predictions if prediction.data_quality == "media"),
-                "baja": sum(1 for prediction in bundle.predictions if prediction.data_quality == "baja"),
-                "sin_datos": sum(
-                    1 for prediction in bundle.predictions if prediction.data_quality == "sin datos"
-                ),
-            },
-            "pleno": {
-                "score": f"{bundle.pleno_score[0]}-{bundle.pleno_score[1]}",
-                "probability": round(bundle.pleno_probability, 6),
-                "alternatives": bundle.pleno.score_options,
-            },
-        },
+        "analysis": _analysis_payload(bundle),
         "recommendations": _recommendations(bundle, tickets, config, mode),
         "disclaimer": (
             "La Quiniela es un juego de azar. Las probabilidades proceden de un "
             "modelo estadístico (Poisson Dixon-Coles + Elo) y no garantizan "
             "ningún resultado. Los premios son de reparto y pueden variar. "
             "Juega con responsabilidad y solo dinero que puedas permitirte perder."
+        ),
+    }
+
+
+def _prediction_reasoning(
+    bundle: PredictionBundle, ticket: Ticket, config: QuinielaConfig
+) -> list[str]:
+    """Explicación legible de por qué el optimizador elige este boleto."""
+    model = get_quiniela_model()
+    dataset = model.dataset_summary()
+    categories = ticket.category_probabilities
+    at_least_13 = sum(categories[key] for key in ("13", "14", "15"))
+    ordered = sorted(
+        (prediction for prediction in bundle.predictions if not prediction.is_pleno),
+        key=lambda prediction: max(prediction.probabilities.values()),
+        reverse=True,
+    )
+    clearest = ordered[:2]
+    openest = ordered[-2:]
+    covered = [
+        f"{index + 1} ({'/'.join(signs)})"
+        for index, signs in enumerate(ticket.signs)
+        if len(signs) > 1
+    ]
+    low_quality = [
+        prediction
+        for prediction in bundle.predictions
+        if prediction.data_quality in {"baja", "sin datos"}
+    ]
+
+    reasoning = [
+        (
+            "La predicción combina Poisson Dixon-Coles con pesos temporales, "
+            "Elo con diferencia de goles y priors de liga. Cada signo es una "
+            "probabilidad calibrada, no una corazonada."
+        ),
+        (
+            f"El histórico usado tiene {dataset['total_matches']:,} partidos "
+            f"({dataset['date_range']['from']} → {dataset['date_range']['to']}) "
+            f"y {dataset['teams']} equipos."
+        ).replace(",", "."),
+        (
+            "Partidos más claros: "
+            + ", ".join(
+                f"{prediction.home_raw}-{prediction.away_raw} "
+                f"({max(prediction.probabilities, key=prediction.probabilities.get)})"
+                for prediction in clearest
+            )
+            + ". Ahí el boleto no necesita cobertura extra."
+        ),
+        (
+            "Partidos más abiertos: "
+            + ", ".join(
+                f"{prediction.home_raw}-{prediction.away_raw}"
+                for prediction in openest
+            )
+            + ". El optimizador concentra ahí los dobles y triples."
+        ),
+    ]
+    if covered:
+        reasoning.append(
+            "Cobertura aplicada: " + ", ".join(covered) + "."
+        )
+    reasoning.extend(
+        [
+            (
+                f"El pleno al 15 se juega a {ticket.pleno_label}, el marcador "
+                f"más probable ({ticket.pleno_probability * 100:.2f} %)."
+            ),
+            (
+                f"Con {ticket.columns} columnas y {ticket.cost:.2f} €, la "
+                f"probabilidad del pleno al 15 es {categories['15'] * 100:.3f} %, "
+                f"la de 14 aciertos {categories['14'] * 100:.3f} % y la de al "
+                f"menos 13 {at_least_13 * 100:.3f} %."
+            ),
+        ]
+    )
+    if low_quality:
+        if len(low_quality) >= len(bundle.predictions):
+            reasoning.append(
+                "Es una jornada con muchos equipos sin histórico reciente: el "
+                "modelo usa priors de liga y reduce la confianza en esos partidos."
+            )
+        else:
+            reasoning.append(
+                f"{len(low_quality)} partido(s) tienen poca historia reciente; el "
+                "modelo lo refleja bajando su confianza y usando priors de liga."
+            )
+    reasoning.append(
+        "El premio del pleno es de reparto: esta probabilidad es la de acertar, "
+        "no una garantía de cobrar una cantidad concreta."
+    )
+    return reasoning
+
+
+def generate_prediction(
+    jornada: Optional[int] = None,
+    season: Optional[str] = None,
+    budget: float = DEFAULT_BUDGET_EUR,
+    max_doubles: int = 4,
+    max_triples: int = 2,
+    seed: Optional[int] = None,
+) -> dict[str, object]:
+    """
+    Predicción IA: el boleto con mayor probabilidad de pleno al 15.
+
+    A diferencia del generador, aquí el objetivo no es una cartera equilibrada
+    ni la cobertura de premios menores: se maximiza exactamente P(15), el
+    producto de las coberturas de los 14 partidos por la probabilidad del
+    marcador elegido en el pleno.
+    """
+    if budget < TICKET_PRICE_EUR:
+        raise ValueError("El presupuesto mínimo es 0,75 € (una columna)")
+    if max_doubles < 0 or max_triples < 0:
+        raise ValueError("Los dobles y triples no pueden ser negativos")
+    if max_doubles > MAX_DOUBLES or max_triples > MAX_TRIPLES:
+        raise ValueError(
+            f"Máximo permitido: {MAX_DOUBLES} dobles y {MAX_TRIPLES} triples"
+        )
+
+    affordable_columns = max(1, int(budget // TICKET_PRICE_EUR))
+    config = QuinielaConfig(
+        budget=budget,
+        max_doubles=max_doubles,
+        max_triples=max_triples,
+        max_columns=min(MAX_TICKET_COLUMNS, affordable_columns),
+    )
+    bundle = _bundle(jornada, season)
+    effective_seed = seed if seed is not None else int(dt.datetime.now().timestamp())
+
+    ranked = optimize_max_prize(bundle.predictions, bundle.pleno, config)
+    if not ranked:
+        raise ValueError("No se ha podido optimizar ningún boleto con esos límites")
+    label, best = ranked[0]
+    alternatives = ranked[1:4]
+
+    expanded = _expand(best.signs)
+    ticket_payload = {
+        **best.as_dict(1),
+        "variant": label,
+        "expanded_columns": (
+            [
+                {"signs": list(column), "pleno": best.pleno_label}
+                for column in expanded
+            ]
+            if expanded is not None
+            else None
+        ),
+        "expanded_note": (
+            None
+            if expanded is not None
+            else (
+                f"El boleto tiene {best.columns} columnas; se omite la expansión "
+                "completa para no saturar la interfaz."
+            )
+        ),
+    }
+    alternative_payloads = [
+        {
+            **ticket.as_dict(index + 2),
+            "variant": alternative_label,
+            "expanded_columns": None,
+            "expanded_note": None,
+        }
+        for index, (alternative_label, ticket) in enumerate(alternatives)
+    ]
+
+    categories = best.category_probabilities
+    at_least_13 = sum(categories[key] for key in ("13", "14", "15"))
+    at_least_10 = sum(categories.values())
+    model = get_quiniela_model()
+    return {
+        "game": GAME_INFO,
+        "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
+        "seed": effective_seed,
+        "mode": "multiple",
+        "strategy": "jackpot",
+        "strategy_label": "Máxima probabilidad del pleno",
+        "strategy_description": (
+            "Maximiza P(15): concentra la cobertura en los partidos menos "
+            "predecibles y elige el marcador más probable del pleno. Es el "
+            "boleto con más opciones de premio alto, no el más conservador."
+        ),
+        "jornada": _jornada_payload(bundle.jornada),
+        "budget": {
+            "requested": round(budget, 2),
+            "max_doubles": max_doubles,
+            "max_triples": max_triples,
+            "max_columns": config.max_columns,
+            "max_cost": round(config.max_columns * TICKET_PRICE_EUR, 2),
+            "ticket_price": TICKET_PRICE_EUR,
+        },
+        "matches": [_match_payload(prediction) for prediction in bundle.predictions],
+        "tickets": [ticket_payload],
+        "alternatives": alternative_payloads,
+        "portfolio": _multiple_metrics(best),
+        "analysis": _analysis_payload(bundle),
+        "model": {
+            "type": "ensemble: dixon-coles + elo + priors de liga",
+            "version": "1.0",
+            "objective": "max_probability_pleno_15",
+            "dataset": model.dataset_summary(),
+            "config": {
+                "max_age_days": model.config.max_age_days,
+                "half_life_days": model.config.half_life_days,
+                "regularization": model.config.regularization,
+                "draw_rho": model.config.draw_rho,
+                "elo_k": model.config.elo_k,
+                "elo_home_advantage": model.config.elo_home_advantage,
+            },
+            "explanation": (
+                "Ensemble estadístico: Poisson Dixon-Coles estima los goles "
+                "esperados con pesos temporales; Elo aporta una señal robusta "
+                "entre ligas; los priors cubren equipos sin histórico. El "
+                "optimizador maximiza la probabilidad exacta del pleno al 15."
+            ),
+            "backtest": None,
+        },
+        "target": {
+            "objective": "max_probability_pleno_15",
+            "top_prize_probability": round(categories["15"], 8),
+            "second_prize_probability": round(categories["14"], 8),
+            "at_least_13_probability": round(at_least_13, 8),
+            "at_least_10_probability": round(at_least_10, 8),
+            "expected_return": best.prize_estimate["expected_return"],
+        },
+        "reasoning": _prediction_reasoning(bundle, best, config),
+        "recommendations": _recommendations(bundle, [best], config, "multiple"),
+        "disclaimer": (
+            "La Quiniela es un juego de azar. Esta predicción maximiza la "
+            "probabilidad estimada del premio alto según el histórico, pero no "
+            "garantiza ningún resultado ni una cuantía de premio. Los premios "
+            "son de reparto. Juega con responsabilidad."
         ),
     }
 

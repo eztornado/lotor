@@ -36,6 +36,8 @@ Proyecto de ejemplo en producción: https://lotor.tornadocore.es/
   partidos** de LaLiga, Segunda y las principales ligas europeas
 - Optimiza un boleto múltiple dentro de un presupuesto o una cartera de
   columnas simples, con distribución exacta de aciertos (Poisson-binomial)
+- **Predicción IA**: maximiza la probabilidad exacta del pleno al 15 con
+  alternativas y explicación del modelo
 - Infiere la competición de cada partido (LaLiga, Copa, Europa, Liga F) y
   avisa cuando la jornada es mixta o el equipo no tiene histórico
 
@@ -205,6 +207,7 @@ Los endpoints legacy de predicción IA (`/api/v1/predictions`, `/api/v1/history`
 - `GET /meta` - Reglas, estado del dataset y estrategias
 - `GET /jornadas` - Jornadas disponibles
 - `GET /jornada` / `GET /jornada/{n}` - Predicciones 1-X-2 y pleno al 15
+- `GET /prediction` - Boleto con mayor probabilidad de pleno al 15
 - `GET /history?limit=50` - Últimos partidos del histórico
 - `GET /stats` - Modelo, ligas, mejores equipos y backtest
 - `GET /backtest?limit=400` - Evaluación fuera de muestra
