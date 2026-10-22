@@ -86,13 +86,13 @@ export default function HomePage() {
 
       <Grid>
         {GAMES.map((game) => (
-          <Grid.Col key={game.id} span={{ base: 12, md: 6 }}>
+          <Grid.Col key={game.id} span={{ base: 12, md: 4 }}>
             <GameCard game={game} />
           </Grid.Col>
         ))}
       </Grid>
 
-      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
         <Paper shadow="xs" p="md" withBorder>
           <Stack gap="sm">
             <Title order={3}>🎯 El Gordo de la Primitiva</Title>
@@ -108,6 +108,15 @@ export default function HomePage() {
             <Text size="sm">• Selecciona <strong>6 números</strong> del 1 al 49</Text>
             <Text size="sm">• Se añade <strong>complementario</strong> y <strong>reintegro</strong> (0–9)</Text>
             <Text size="sm">• Sorteo de <strong>lunes a sábado</strong></Text>
+          </Stack>
+        </Paper>
+
+        <Paper shadow="xs" p="md" withBorder>
+          <Stack gap="sm">
+            <Title order={3}>⚽ La Quiniela</Title>
+            <Text size="sm">• <strong>14 partidos</strong> con signos 1, X o 2</Text>
+            <Text size="sm">• <strong>Pleno al 15</strong> con marcador exacto</Text>
+            <Text size="sm">• Múltiples con <strong>dobles y triples</strong></Text>
           </Stack>
         </Paper>
       </SimpleGrid>

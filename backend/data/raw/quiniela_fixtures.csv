@@ -1,0 +1,46 @@
+season,jornada,start_date,match_number,home_team,away_team,kickoff_day,kickoff_time,kickoff_date,competition,is_pleno,source
+2026/27,17,2026-10-27,1,RSD.ALCALA,LAS PALMAS,MAR,20:00,2026-10-27,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,2,ALCOYANO,MALLORCA,MIE,20:00,2026-10-28,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,3,AROSA SC,PONTEVEDRA,MAR,21:00,2026-10-27,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,4,AT.CALATAYUD,OSASUNA,JUE,19:00,2026-10-29,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,5,BADAJOZ,TENERIFE,MIE,20:00,2026-10-28,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,6,CD CIEZA,GRANADA,MIE,20:30,2026-10-28,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,7,CONQUENSE,CASTELLÓN,JUE,20:00,2026-10-29,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,8,CD COVADONGA,VALLADOLID,MIE,20:00,2026-10-28,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,9,CD MINERA,CARTAGENA,MIE,20:30,2026-10-28,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,10,DON BENITO,EXTREMADURA,MAR,20:30,2026-10-27,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,11,CD LAREDO,BURGOS,JUE,20:00,2026-10-29,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,12,NUMANCIA,R.OVIEDO,MIE,20:00,2026-10-28,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,13,CD TUDELANO,R.ZARAGOZA,MAR,21:00,2026-10-27,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,14,XEREZ,CÁDIZ,MIE,21:00,2026-10-28,La Quiniela,False,eduardolosilla.es
+2026/27,17,2026-10-27,15,REC.HUELVA,RAYO,MAR,21:00,2026-10-27,La Quiniela,True,eduardolosilla.es
+2026/27,18,2026-10-31,1,LEVANTE,AT.MADRID,SAB,14:00,2026-10-31,La Quiniela,False,eduardolosilla.es
+2026/27,18,2026-10-31,2,RAYO,CELTA,SAB,16:15,2026-10-31,La Quiniela,False,eduardolosilla.es
+2026/27,18,2026-10-31,3,BETIS,MÁLAGA,SAB,18:30,2026-10-31,La Quiniela,False,eduardolosilla.es
+2026/27,18,2026-10-31,4,BARCELONA,ALAVÉS,SAB,21:00,2026-10-31,La Quiniela,False,eduardolosilla.es
+2026/27,18,2026-10-31,5,GETAFE,SEVILLA,DOM,14:00,2026-11-01,La Quiniela,False,eduardolosilla.es
+2026/27,18,2026-10-31,6,RACING S.,R.MADRID,DOM,16:15,2026-11-01,La Quiniela,False,eduardolosilla.es
+2026/27,18,2026-10-31,7,ELCHE,VALENCIA,DOM,18:30,2026-11-01,La Quiniela,False,eduardolosilla.es
+2026/27,18,2026-10-31,8,EIBAR,ALMERÍA,SAB,16:15,2026-10-31,La Quiniela,False,eduardolosilla.es
+2026/27,18,2026-10-31,9,ELDENSE,GRANADA,DOM,14:00,2026-11-01,La Quiniela,False,eduardolosilla.es
+2026/27,18,2026-10-31,10,BURGOS,CASTELLÓN,DOM,18:30,2026-11-01,La Quiniela,False,eduardolosilla.es
+2026/27,18,2026-10-31,11,ALAVÉS (F),R.SOCIEDAD (F),DOM,12:00,2026-11-01,Liga F,False,eduardolosilla.es
+2026/27,18,2026-10-31,12,MADRID CFF (F),DEPORTIVO (F),SAB,18:00,2026-10-31,Liga F,False,eduardolosilla.es
+2026/27,18,2026-10-31,13,SEVILLA (F),R.MADRID (F),DOM,19:00,2026-11-01,Liga F,False,eduardolosilla.es
+2026/27,18,2026-10-31,14,TENERIFE (F),ATH.CLUB (F),LUN,20:00,2026-11-02,Liga F,False,eduardolosilla.es
+2026/27,18,2026-10-31,15,ATH.CLUB,R.SOCIEDAD,DOM,21:00,2026-11-01,La Quiniela,True,eduardolosilla.es
+2026/27,19,2026-11-03,1,BARCELONA,ASTON VILLA,MAR,21:00,2026-11-03,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,2,BODO GLIMT,LOSC LILLE,MAR,21:00,2026-11-03,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,3,MAN.UNITED,ROMA,MAR,21:00,2026-11-03,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,4,VILLARREAL,PSG,MAR,21:00,2026-11-03,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,5,AEK ATENAS,R.MADRID,MIE,18:45,2026-11-04,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,6,FENERBAHCE,LIVERPOOL,MIE,18:45,2026-11-04,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,7,B.DORTMUND,BETIS,MIE,21:00,2026-11-04,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,8,OPORTO,NAPOLI,MIE,21:00,2026-11-04,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,9,LENS,COMO 1907,MIE,21:00,2026-11-04,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,10,RB LEIPZIG,MAN.CITY,MIE,21:00,2026-11-04,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,11,SLAVIA PRAGA,ARSENAL,MIE,21:00,2026-11-04,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,12,R.SOCIEDAD,OL. LYON,JUE,18:45,2026-11-05,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,13,CELTA,R. UNION SG,JUE,21:00,2026-11-05,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,14,GETAFE,BRIGHTON,JUE,21:00,2026-11-05,La Quiniela,False,eduardolosilla.es
+2026/27,19,2026-11-03,15,AT.MADRID,B.MUNICH,MAR,21:00,2026-11-03,La Quiniela,True,eduardolosilla.es

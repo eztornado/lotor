@@ -4,9 +4,11 @@
  *
  * - El Gordo de la Primitiva -> `./gordo`
  * - Bonoloto -> `./bonoloto`
+ * - La Quiniela -> `./quiniela`
  * - Cliente HTTP base -> `./client`
  */
 export { api, API_BASE_URL } from './client'
 export * from './gordo'
 export * from './bonoloto'
+export * from './quiniela'
 export { default } from './client'

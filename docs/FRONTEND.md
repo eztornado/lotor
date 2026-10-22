@@ -1,7 +1,8 @@
 # 🖥️ Arquitectura del frontend
 
-LoTor es una aplicación **multi‑juego**: hoy soporta *El Gordo de la Primitiva* y
-*Bonoloto*, y está preparada para añadir más juegos sin tocar la navegación.
+LoTor es una aplicación **multi‑juego**: hoy soporta *El Gordo de la Primitiva*,
+*Bonoloto* y *La Quiniela*, y está preparada para añadir más juegos sin tocar la
+navegación.
 
 ```
 frontend/
@@ -28,7 +29,7 @@ frontend/
     │   │   ├── RecommendationsPanel.tsx
     │   │   ├── HowItWorks.tsx
     │   │   └── format.ts         # Reexporta shared/format
-    │   └── bonoloto/             # Componentes de UI de Bonoloto
+    │   ├── bonoloto/             # Componentes de UI de Bonoloto
     │       ├── Ball.tsx
     │       ├── CombinationCard.tsx
     │       ├── PortfolioOverview.tsx
@@ -38,6 +39,13 @@ frontend/
     │       ├── RecommendationsPanel.tsx
     │       ├── HowItWorks.tsx
     │       └── format.ts         # Reexporta shared/format
+    │   └── quiniela/             # Componentes de UI de La Quiniela
+    │       ├── PortfolioOverview.tsx
+    │       ├── TicketCard.tsx
+    │       ├── PrizePanel.tsx
+    │       ├── AnalysisPanel.tsx
+    │       ├── HowItWorks.tsx
+    │       └── format.ts
     ├── pages/
     │   ├── HomePage.tsx          # Home multi‑juego (tarjeta por juego)
     │   ├── gordo/                # Páginas de El Gordo
@@ -46,14 +54,19 @@ frontend/
     │   │   ├── StatisticsPage.tsx
     │   │   ├── HistoryPage.tsx
     │   │   └── WeeklyCombinationsPage.tsx
-    │   └── bonoloto/             # Páginas de Bonoloto
-    │       ├── BonolotoPage.tsx      # Generador de carteras
-    │       ├── BonolotoStatsPage.tsx
-    │       └── BonolotoHistoryPage.tsx
+    │   ├── bonoloto/             # Páginas de Bonoloto
+    │   │   ├── BonolotoPage.tsx      # Generador de carteras
+    │   │   ├── BonolotoStatsPage.tsx
+    │   │   └── BonolotoHistoryPage.tsx
+    │   └── quiniela/             # Páginas de La Quiniela
+    │       ├── QuinielaPage.tsx       # Generador de múltiples/columnas
+    │       ├── QuinielaStatsPage.tsx
+    │       └── QuinielaHistoryPage.tsx
     └── services/
         ├── client.ts             # Instancia axios (/api/v1)
         ├── gordo.ts              # Tipos + clientes de El Gordo
         ├── bonoloto.ts           # Tipos + cliente de Bonoloto
+        ├── quiniela.ts           # Tipos + cliente de La Quiniela
         └── api.ts                # Barrel: reexporta todo (compatibilidad)
 ```
 
@@ -70,6 +83,9 @@ frontend/
 | `/bonoloto` | Generador Bonoloto |
 | `/bonoloto/estadisticas` | Estadísticas Bonoloto |
 | `/bonoloto/historial` | Historial Bonoloto |
+| `/quiniela` | Generador de La Quiniela |
+| `/quiniela/estadisticas` | Estadísticas y backtest |
+| `/quiniela/historial` | Historial de partidos |
 
 Las rutas antiguas (`/prediction`, `/statistics`, `/history`,
 `/weekly-combinations`) se redirigen a sus equivalentes bajo `/gordo`.
@@ -100,7 +116,8 @@ navegación y las tarjetas de la home se actualizan solas.
 ## 🧩 Servicios
 
 - `services/client.ts`: única instancia de axios con `baseURL = /api/v1`.
-- `services/gordo.ts` y `services/bonoloto.ts`: tipos y clientes por juego.
+- `services/gordo.ts`, `services/bonoloto.ts` y `services/quiniela.ts`: tipos y
+  clientes por juego.
 - `services/api.ts`: barrel de compatibilidad; los imports antiguos
   (`import { bonolotoApi } from '../services/api'`) siguen funcionando.
 

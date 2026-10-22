@@ -1,7 +1,7 @@
-# LoTor - Sistema de Predicción El Gordo de la Primitiva y Bonoloto
+# LoTor - Predicciones y generadores para El Gordo, Bonoloto y La Quiniela
 
 Sistema de predicción basado en Inteligencia Artificial para El Gordo de la
-Primitiva y generadores inteligentes de carteras para El Gordo y Bonoloto
+Primitiva y generadores inteligentes para El Gordo, Bonoloto y La Quiniela
 (España).
 
 Proyecto de ejemplo en producción: https://lotor.tornadocore.es/
@@ -27,6 +27,19 @@ Proyecto de ejemplo en producción: https://lotor.tornadocore.es/
 - Generador de carteras de **1 a 10 apuestas** con histórico desde 1988
 
 [Ver documentación completa de Bonoloto](docs/BONOLOTO.md)
+
+### La Quiniela
+
+- **14 partidos** con signos **1 / X / 2** + **pleno al 15** (marcador exacto)
+- Apuesta de **0,75 €** por columna; múltiples con **dobles y triples**
+- Modelo Poisson Dixon-Coles + Elo + priors de competición sobre **20.000+
+  partidos** de LaLiga, Segunda y las principales ligas europeas
+- Optimiza un boleto múltiple dentro de un presupuesto o una cartera de
+  columnas simples, con distribución exacta de aciertos (Poisson-binomial)
+- Infiere la competición de cada partido (LaLiga, Copa, Europa, Liga F) y
+  avisa cuando la jornada es mixta o el equipo no tiene histórico
+
+[Ver documentación completa de La Quiniela](docs/QUINIELA.md)
 
 ## 🏗️ Arquitectura
 
@@ -59,16 +72,16 @@ LoTor/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/   # Componentes UI (layout + por juego)
-│   │   ├── pages/        # Páginas (home, gordo/, bonoloto/)
-│   │   ├── services/     # Cliente API (client, gordo, bonoloto)
+│   │   ├── pages/        # Páginas (home, gordo/, bonoloto/, quiniela/)
+│   │   ├── services/     # Cliente API (client, gordo, bonoloto, quiniela)
 │   │   ├── games.ts      # Registro multi-juego (navegación/colores)
 │   │   └── App.tsx       # Router y layout
 │   └── public/
 └── docs/
 ```
 
-La app es **multi-juego** (El Gordo y Bonoloto) con un selector en la cabecera.
-Ver [documentación del frontend](docs/FRONTEND.md).
+La app es **multi-juego** (El Gordo, Bonoloto y La Quiniela) con un selector en
+la cabecera. Ver [documentación del frontend](docs/FRONTEND.md).
 
 ## 🚀 Instalación
 
@@ -123,10 +136,13 @@ Lotoideas (resultados oficiales de SELAE):
   06/02/2005 (formato 5 números + clave).
 - **Bonoloto**: `backend/data/raw/bonoloto_historical.csv`, 9.420 sorteos desde
   el 28/02/1988.
-- Scripts: `backend/scripts/import_gordo.py` e
-  `backend/scripts/import_bonoloto.py` (con modo `--offline`).
-- API de actualización: `GET|POST /api/v1/gordo/refresh` y
-  `/api/v1/bonoloto/refresh`.
+- **La Quiniela**: `backend/data/raw/quiniela_matches.csv` (20.781 partidos,
+  2014–2026) y `backend/data/raw/quiniela_fixtures.csv` (próximas jornadas).
+  Fuente: Football-Data.co.uk y calendario público de Eduardo Losilla.
+- Scripts: `backend/scripts/import_gordo.py`, `import_bonoloto.py` e
+  `import_quiniela.py` (con modo `--offline`).
+- API de actualización: `GET|POST /api/v1/gordo/refresh`,
+  `/api/v1/bonoloto/refresh` y `/api/v1/quiniela/refresh`.
 
 Los datasets se cachean en memoria y son la fuente de verdad de los
 generadores. Los endpoints legacy de predicción conservan sus fuentes con
@@ -183,6 +199,27 @@ Los endpoints legacy de predicción IA (`/api/v1/predictions`, `/api/v1/history`
 
 > La probabilidad del <em>jackpot</em> por apuesta es siempre <strong>1 entre 13.983.816</strong>.
 > El generador optimiza cobertura y evita combinaciones populares (menor reparto); no predice el azar.
+
+### La Quiniela (`/api/v1/quiniela`)
+
+- `GET /meta` - Reglas, estado del dataset y estrategias
+- `GET /jornadas` - Jornadas disponibles
+- `GET /jornada` / `GET /jornada/{n}` - Predicciones 1-X-2 y pleno al 15
+- `GET /history?limit=50` - Últimos partidos del histórico
+- `GET /stats` - Modelo, ligas, mejores equipos y backtest
+- `GET /backtest?limit=400` - Evaluación fuera de muestra
+- `GET /teams/{name}` - Perfil de un equipo
+- `POST /generate` / `GET /generate` - Múltiple optimizado o cartera de
+  columnas simples (`mode=multiple|simple`, `budget`, `max_doubles`,
+  `max_triples`, `count`, `strategy`, `seed`)
+- `GET|POST /refresh` - Actualiza calendario (`scope=fixtures`), resultados
+  (`matches`) o ambos (`all`)
+
+> Las probabilidades 1/X/2 salen de una distribución de marcadores
+> Dixon-Coles. Para un múltiple, la probabilidad de acertar cada partido es la
+> suma de los signos marcados y el total de aciertos sigue una distribución
+> Poisson-binomial exacta. La Quiniela sigue siendo un juego de azar: el modelo
+> estima probabilidades, no garantiza premios.
 
 ## ⚠️ Descargo de Responsabilidad
 

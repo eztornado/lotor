@@ -10,6 +10,9 @@ import WeeklyCombinationsPage from './pages/gordo/WeeklyCombinationsPage'
 import BonolotoPage from './pages/bonoloto/BonolotoPage'
 import BonolotoStatsPage from './pages/bonoloto/BonolotoStatsPage'
 import BonolotoHistoryPage from './pages/bonoloto/BonolotoHistoryPage'
+import QuinielaPage from './pages/quiniela/QuinielaPage'
+import QuinielaStatsPage from './pages/quiniela/QuinielaStatsPage'
+import QuinielaHistoryPage from './pages/quiniela/QuinielaHistoryPage'
 import { LEGACY_REDIRECTS } from './games'
 
 function App() {
@@ -32,6 +35,11 @@ function App() {
             <Route path="/bonoloto" element={<BonolotoPage />} />
             <Route path="/bonoloto/estadisticas" element={<BonolotoStatsPage />} />
             <Route path="/bonoloto/historial" element={<BonolotoHistoryPage />} />
+
+            {/* La Quiniela */}
+            <Route path="/quiniela" element={<QuinielaPage />} />
+            <Route path="/quiniela/estadisticas" element={<QuinielaStatsPage />} />
+            <Route path="/quiniela/historial" element={<QuinielaHistoryPage />} />
 
             {/* Rutas heredadas */}
             {LEGACY_REDIRECTS.map((redirect) => (

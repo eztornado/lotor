@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from app.core.config import settings
-from app.api import predictions, history, stats, multi_combinations, bonoloto, gordo
+from app.api import predictions, history, stats, multi_combinations, bonoloto, gordo, quiniela
 
 # Configurar logger (sink explícito a stdout para evitar recursión/bloqueos)
 logger.remove()
@@ -61,6 +61,7 @@ app.include_router(stats.router, prefix=f"{settings.API_V1_STR}/stats", tags=["s
 app.include_router(multi_combinations.router, prefix=f"{settings.API_V1_STR}/combinations", tags=["combinations"])
 app.include_router(bonoloto.router, prefix=f"{settings.API_V1_STR}/bonoloto", tags=["bonoloto"])
 app.include_router(gordo.router, prefix=f"{settings.API_V1_STR}/gordo", tags=["gordo"])
+app.include_router(quiniela.router, prefix=f"{settings.API_V1_STR}/quiniela", tags=["quiniela"])
 
 
 @app.get("/")
@@ -72,7 +73,7 @@ async def root():
     return {
         "message": "LoTor API - Predicciones y generación de loterías",
         "version": settings.VERSION,
-        "games": ["El Gordo de la Primitiva", "Bonoloto"],
+        "games": ["El Gordo de la Primitiva", "Bonoloto", "La Quiniela"],
         "docs": "/docs",
     }
 

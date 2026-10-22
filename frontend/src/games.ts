@@ -8,7 +8,7 @@ import {
   IconTicket,
 } from '@tabler/icons-react'
 
-export type GameId = 'gordo' | 'bonoloto'
+export type GameId = 'gordo' | 'bonoloto' | 'quiniela'
 
 export interface GameNavItem {
   label: string
@@ -68,6 +68,22 @@ export const GAMES: GameDefinition[] = [
       { label: 'Generador', path: '/bonoloto', icon: IconSparkles },
       { label: 'Estadísticas', path: '/bonoloto/estadisticas', icon: IconChartBar },
       { label: 'Historial', path: '/bonoloto/historial', icon: IconTicket },
+    ],
+  },
+  {
+    id: 'quiniela',
+    name: 'La Quiniela',
+    shortName: 'La Quiniela',
+    emoji: '⚽',
+    color: 'teal',
+    tagline: '15 partidos: 14 signos 1-X-2 + pleno al 15',
+    description:
+      'Predicciones estadísticas con Poisson Dixon-Coles, Elo y priors de competición. Genera un múltiple optimizado con dobles y triples o una cartera de columnas simples dentro de tu presupuesto.',
+    basePath: '/quiniela',
+    nav: [
+      { label: 'Generador', path: '/quiniela', icon: IconSparkles },
+      { label: 'Estadísticas', path: '/quiniela/estadisticas', icon: IconChartBar },
+      { label: 'Historial', path: '/quiniela/historial', icon: IconHistory },
     ],
   },
 ]

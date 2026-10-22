@@ -60,6 +60,49 @@ un sistema de fuentes con fallback.
 
   También por API: `GET|POST /api/v1/bonoloto/refresh`.
 
+### La Quiniela
+
+La Quiniela no es una lotería uniforme: cada jornada son 15 partidos de fútbol.
+Por eso este módulo usa dos datasets distintos.
+
+- **Resultados históricos**: `backend/data/raw/quiniela_matches.csv`
+  - **Formato**:
+
+    ```csv
+    date,season,league,league_name,country,tier,home_team,away_team,home_goals,away_goals,result,home_odds,draw_odds,away_odds,source
+    ```
+
+  - **Cobertura**: 20.781 partidos desde el **23/08/2014** hasta el
+    **21/10/2026**. Ligas: `SP1`, `SP2`, `E0`, `D1`, `I1`, `F1`, `N1`, `P1`.
+  - **Fuente**: [Football-Data.co.uk](https://www.football-data.co.uk/),
+    descargado a través del proxy de lectura de Jina para evitar bloqueos.
+  - **Carga**: `app/services/quiniela_data.py`, con normalización de nombres,
+    alias, resolución difusa y caché en memoria.
+
+- **Calendario de jornadas**: `backend/data/raw/quiniela_fixtures.csv`
+  - **Formato**:
+
+    ```csv
+    season,jornada,start_date,match_number,home_team,away_team,kickoff_day,kickoff_time,kickoff_date,competition,is_pleno,source
+    ```
+
+  - **Cobertura**: jornadas 17, 18 y 19 de 2026/27 (45 partidos).
+  - **Fuente**: página pública de
+    [Eduardo Losilla](https://www.eduardolosilla.es/quiniela/ayudas/proximas).
+  - **Competición**: la fuente solo publica los emparejamientos; al cargar el
+    CSV se infiere `LaLiga`, `LaLiga Hypermotion`, `Copa del Rey`, `Europea` o
+    `Liga F` a partir del histórico de los equipos. Una jornada con varias
+    competiciones se etiqueta como `Mixta` y expone la lista `competitions`.
+  - **Actualización**:
+
+    ```bash
+    python backend/scripts/import_quiniela.py
+    python backend/scripts/import_quiniela.py --offline
+    ```
+
+    También por API:
+    `GET|POST /api/v1/quiniela/refresh?scope=fixtures|matches|all`.
+
 ### Próximo sorteo
 
 - **El Gordo**: `next_gordo_date()` avanza al siguiente **domingo** con corte de
